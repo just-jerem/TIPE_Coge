@@ -3,37 +3,29 @@ import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
 from src import Brayton, Ericsson
-import time  # <-- Pour le timer
+import time
 
-# ================================
-# Titre
-# ================================
 st.title("Simulation de Cycles Thermodynamiques")
 
 # ================================
 # Choix du cycle
 # ================================
-choix_cycle = st.sidebar.selectbox(
-    "Choisir le cycle thermodynamique",
-    ("Cycle de Brayton", "Cycle d'Ericsson")
-)
+choix_cycle = st.selectbox("Choisir le cycle thermodynamique", ("Cycle de Brayton", "Cycle d'Ericsson"))
 
 # ================================
-# Paramètres diagrammes (st.form pour ne pas rerun)
+# Paramètres diagrammes PV/TS
 # ================================
-st.sidebar.markdown("### Paramètres diagrammes P-V et T-S")
-with st.form("form_diagrams", clear_on_submit=False):
+with st.expander("Paramètres diagrammes P-V et T-S", expanded=True):
     if choix_cycle == "Cycle d'Ericsson":
-        T_min = st.slider("Température Minimale (K)", 250, 500, 300, key="Tmin_diagram")
-        T_max = st.slider("Température Maximale (K)", 500, 1500, 1100, key="Tmax_diagram")
-        P_min = st.slider("Pression Minimale (Pa)", 1e5, 5e5, 2e5, key="Pmin_diagram")
-        P_max = st.slider("Pression Maximale (Pa)", 1e6, 30e5, 20e5, key="Pmax_diagram")
+        T_min = st.slider("Température Minimale (K)", 250, 500, 300)
+        T_max = st.slider("Température Maximale (K)", 500, 1500, 1100)
+        P_min = st.slider("Pression Minimale (Pa)", 1e5, 5e5, 2e5)
+        P_max = st.slider("Pression Maximale (Pa)", 1e6, 30e5, 20e5)
     else:
-        T1 = st.slider("Température entrée compresseur (K)", 250, 500, 300, key="T1_diagram")
-        P1 = st.slider("Pression entrée compresseur (Pa)", 1e5, 5e5, 2e5, key="P1_diagram")
-        pressure_ratio = st.slider("Rapport de pression", 2, 20, 10, key="PR_diagram")
-        T3 = st.slider("Température sortie chambre (K)", 800, 1500, 1100, key="T3_diagram")
-    st.form_submit_button("Mettre à jour diagrammes")
+        T1 = st.slider("Température entrée compresseur (K)", 250, 500, 300)
+        P1 = st.slider("Pression entrée compresseur (Pa)", 1e5, 5e5, 2e5)
+        pressure_ratio = st.slider("Rapport de pression", 2, 20, 10)
+        T3 = st.slider("Température sortie chambre (K)", 800, 1500, 1100)
 
 # ================================
 # Calcul du cycle principal
@@ -47,7 +39,6 @@ else:
 # Diagrammes P-V et T-S
 # ================================
 curves = results["curves"]
-
 plt.figure(figsize=(12,5))
 plt.subplot(1,2,1)
 plt.plot(curves["V12"], np.array(curves["P12"])/1e5, 'r', label="1→2")
@@ -77,80 +68,77 @@ st.pyplot(plt)
 # ================================
 ener = results["energetics"]
 st.subheader("Bilan énergétique du cycle")
+
 if choix_cycle == "Cycle d'Ericsson":
     df_ener = pd.DataFrame({
-        "Grandeur": ["Chaleur reçue (Qin)", "Chaleur rejetée (Qout)", "Travail net (Wnet)", "Rendement (%)"],
+        "Grandeur": ["Qin (kJ/kg)", "Qout (kJ/kg)", "W_cycle (kJ/kg)", "Rendement (%)"],
         "Valeur": [
-            ener.get("Q_in", 0)/1000,
-            ener.get("Q_out", 0)/1000,
-            ener.get("W_cycle", 0)/1000,
-            ener.get("eta", 0)*100
+            ener.get("Q_in",0)/1000,
+            ener.get("Q_out",0)/1000,
+            ener.get("W_cycle",0)/1000,
+            ener.get("eta",0)*100
         ]
     })
-else:
+else:  # Brayton
     df_ener = pd.DataFrame({
-        "Grandeur": ["Chaleur reçue (Qin)", "Travail compresseur (Wcomp)", "Travail turbine (Wturb)", "Travail net (Wnet)", "Rendement (%)"],
+        "Grandeur": ["Wcomp (kJ/kg)", "Wturb (kJ/kg)", "Wnet (kJ/kg)", "Qin (kJ/kg)", "Rendement (%)"],
         "Valeur": [
-            ener.get("Q_in", 0)/1000,
-            ener.get("W_comp", 0)/1000,
-            ener.get("W_turb", 0)/1000,
-            ener.get("W_net", 0)/1000,
-            ener.get("eta", 0)*100
+            ener.get("W_comp",0)/1000,
+            ener.get("W_turb",0)/1000,
+            ener.get("W_net",0)/1000,
+            ener.get("Q_in",0)/1000,
+            ener.get("eta",0)*100
         ]
     })
 st.table(df_ener)
 
 # ================================
-# Étude paramétrique
+# Paramètres étude paramétrique
 # ================================
-st.markdown("---")
-st.header("Étude paramétrique")
-st.sidebar.markdown("### Paramètres étude paramétrique")
+with st.expander("Paramètres étude paramétrique", expanded=True):
+    if choix_cycle == "Cycle d'Ericsson":
+        Tmin_min = st.number_input("Tmin min (K)", 200, 500, 280)
+        Tmin_max = st.number_input("Tmin max (K)", 200, 500, 330)
+        Tmin_points = st.number_input("Nombre points Tmin", 2, 20, 6)
+        Tmax_min = st.number_input("Tmax min (K)", 500, 1500, 900)
+        Tmax_max = st.number_input("Tmax max (K)", 500, 1500, 1300)
+        Tmax_points = st.number_input("Nombre points Tmax", 2, 20, 6)
+        Pmin_min = st.number_input("Pmin min (Pa)", 1e5, 5e5, 1e5)
+        Pmin_max = st.number_input("Pmin max (Pa)", 1e5, 5e5, 3e5)
+        Pmin_points = st.number_input("Nombre points Pmin", 2, 10, 5)
+        Pmax_min = st.number_input("Pmax min (Pa)", 1e6, 30e5, 15e5)
+        Pmax_max = st.number_input("Pmax max (Pa)", 1e6, 30e5, 30e5)
+        Pmax_points = st.number_input("Nombre points Pmax", 2, 10, 5)
+    else:
+        T1_min = st.number_input("T1 min (K)", 200, 500, 280)
+        T1_max = st.number_input("T1 max (K)", 200, 500, 330)
+        T1_points = st.number_input("Nombre points T1", 2, 20, 6)
+        P1_min = st.number_input("P1 min (Pa)", 1e5, 5e5, 1e5)
+        P1_max = st.number_input("P1 max (Pa)", 1e5, 5e5, 3e5)
+        P1_points = st.number_input("Nombre points P1", 2, 10, 5)
+        PR_min = st.number_input("PR min", 2, 20, 2)
+        PR_max = st.number_input("PR max", 2, 20, 12)
+        PR_points = st.number_input("Nombre points PR", 2, 10, 6)
+        T3_min = st.number_input("T3 min (K)", 800, 1500, 900)
+        T3_max = st.number_input("T3 max (K)", 800, 1500, 1300)
+        T3_points = st.number_input("Nombre points T3", 2, 20, 6)
 
-# Paramètres modifiables
-if choix_cycle == "Cycle d'Ericsson":
-    Tmin_min = st.sidebar.number_input("Tmin min (K)", 200, 500, 280)
-    Tmin_max = st.sidebar.number_input("Tmin max (K)", 200, 500, 330)
-    Tmin_points = st.sidebar.number_input("Nombre de points Tmin", 2, 20, 6)
-    Tmax_min = st.sidebar.number_input("Tmax min (K)", 500, 1500, 900)
-    Tmax_max = st.sidebar.number_input("Tmax max (K)", 500, 1500, 1300)
-    Tmax_points = st.sidebar.number_input("Nombre de points Tmax", 2, 20, 6)
-    Pmin_min = st.sidebar.number_input("Pmin min (Pa)", 1e5, 5e5, 1e5)
-    Pmin_max = st.sidebar.number_input("Pmin max (Pa)", 1e5, 5e5, 3e5)
-    Pmin_points = st.sidebar.number_input("Nombre de points Pmin", 2, 10, 5)
-    Pmax_min = st.sidebar.number_input("Pmax min (Pa)", 1e6, 30e5, 15e5)
-    Pmax_max = st.sidebar.number_input("Pmax max (Pa)", 1e6, 30e5, 30e5)
-    Pmax_points = st.sidebar.number_input("Nombre de points Pmax", 2, 10, 5)
-else:
-    T1_min = st.sidebar.number_input("T1 min (K)", 200, 500, 280)
-    T1_max = st.sidebar.number_input("T1 max (K)", 200, 500, 330)
-    T1_points = st.sidebar.number_input("Nombre de points T1", 2, 20, 6)
-    P1_min = st.sidebar.number_input("P1 min (Pa)", 1e5, 5e5, 1e5)
-    P1_max = st.sidebar.number_input("P1 max (Pa)", 1e5, 5e5, 3e5)
-    P1_points = st.sidebar.number_input("Nombre de points P1", 2, 10, 5)
-    PR_min = st.sidebar.number_input("PR min", 2, 20, 2)
-    PR_max = st.sidebar.number_input("PR max", 2, 20, 12)
-    PR_points = st.sidebar.number_input("Nombre de points PR", 2, 10, 6)
-    T3_min = st.sidebar.number_input("T3 min (K)", 800, 1500, 900)
-    T3_max = st.sidebar.number_input("T3 max (K)", 800, 1500, 1300)
-    T3_points = st.sidebar.number_input("Nombre de points T3", 2, 20, 6)
-
-# Lancer étude
+# ================================
+# Lancer étude paramétrique
+# ================================
 run_study = st.button("Lancer l'étude paramétrique")
 
 if run_study:
     st.info("Simulation en cours...")
     progress_bar = st.progress(0)
-
+    timer_placeholder = st.empty()
+    table_placeholder = st.empty()
     chart_q = st.empty()
     chart_w = st.empty()
     chart_eta = st.empty()
-    table_placeholder = st.empty()
 
     results_list = []
     k = 0
-
-    import time
     start_time = time.time()
 
     if choix_cycle == "Cycle d'Ericsson":
@@ -176,18 +164,16 @@ if run_study:
                             "Wnet (kJ/kg)": ener.get("W_cycle",0)/1000,
                             "Rendement (%)": ener.get("eta",0)*100
                         })
-
                         df = pd.DataFrame(results_list)
                         table_placeholder.dataframe(df)
-
-                        # Graphiques en temps réel
                         chart_q.line_chart(df[["Qin (kJ/kg)","Qout (kJ/kg)"]])
                         chart_w.line_chart(df[["Wnet (kJ/kg)"]])
                         chart_eta.line_chart(df[["Rendement (%)"]])
-
                         k += 1
                         progress_bar.progress(int(100*k/total))
-
+                        elapsed = time.time() - start_time
+                        remaining = (elapsed/k)*(total-k) if k>0 else 0
+                        timer_placeholder.info(f"Temps restant estimé : {int(remaining)} s")
     else:  # Brayton
         T1_values = np.linspace(T1_min, T1_max, T1_points)
         P1_values = np.linspace(P1_min, P1_max, P1_points)
@@ -203,26 +189,24 @@ if run_study:
                         ener = res["energetics"]
                         results_list.append({
                             "T1": T1, "P1 (bar)": P1/1e5, "PR": PR, "T3": T3,
-                            "Qin (kJ/kg)": ener.get("Q_in",0)/1000,
                             "Wcomp (kJ/kg)": ener.get("W_comp",0)/1000,
                             "Wturb (kJ/kg)": ener.get("W_turb",0)/1000,
                             "Wnet (kJ/kg)": ener.get("W_net",0)/1000,
+                            "Qin (kJ/kg)": ener.get("Q_in",0)/1000,
                             "Rendement (%)": ener.get("eta",0)*100
                         })
-
                         df = pd.DataFrame(results_list)
                         table_placeholder.dataframe(df)
-
-                        # Graphiques en temps réel
-                        chart_q.line_chart(df[["Qin (kJ/kg)"]])
+                        chart_q.line_chart(df[["Wcomp (kJ/kg)","Wturb (kJ/kg)"]])
                         chart_w.line_chart(df[["Wnet (kJ/kg)"]])
                         chart_eta.line_chart(df[["Rendement (%)"]])
-
                         k += 1
                         progress_bar.progress(int(100*k/total))
+                        elapsed = time.time() - start_time
+                        remaining = (elapsed/k)*(total-k) if k>0 else 0
+                        timer_placeholder.info(f"Temps restant estimé : {int(remaining)} s")
 
     st.success("Étude paramétrique terminée !")
-
     # Meilleure configuration
     idx_max = df["Rendement (%)"].idxmax()
     best = df.loc[idx_max]
