@@ -216,6 +216,7 @@ if run_study:
 # ================================
 # Import CSV
 # ================================
+
 st.markdown("---")
 st.header("Importer un CSV pour tracer les résultats existants")
 
@@ -223,8 +224,15 @@ csv_file = st.file_uploader("Choisir un fichier CSV", type=["csv"])
 
 if csv_file is not None:
     df_csv = pd.read_csv(csv_file)
-    st.subheader("Aperçu des données importées")
-    st.dataframe(df_csv.head())
+
+    # Pagination pour gros fichiers
+    st.subheader("Aperçu des données importées (pagination)")
+    page_size = st.number_input("Nombre de lignes par page", min_value=5, max_value=100, value=20)
+    total_pages = int(np.ceil(len(df_csv) / page_size))
+    page_num = st.slider("Page", 1, total_pages, 1)
+    start_idx = (page_num - 1) * page_size
+    end_idx = start_idx + page_size
+    st.dataframe(df_csv.iloc[start_idx:end_idx])
 
     # Détection du type de cycle
     if all(col in df_csv.columns for col in ["Qin (kJ/kg)","Qout (kJ/kg)","Wnet (kJ/kg)","Rendement (%)"]):
@@ -254,5 +262,7 @@ if csv_file is not None:
         best_csv = df_csv.loc[idx_max]
         st.subheader("Meilleure configuration")
         st.table(best_csv)
+
+
 
 
