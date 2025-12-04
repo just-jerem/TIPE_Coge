@@ -136,17 +136,22 @@ else:
     T3_points = st.sidebar.number_input("Nombre de points T3", 2, 20, 6)
 
 # Lancer étude
-run_study = st.button("Lancer étude paramétrique")
+run_study = st.button("Lancer l'étude paramétrique")
 
 if run_study:
     st.info("Simulation en cours...")
     progress_bar = st.progress(0)
-    chart_placeholder = st.empty()
+
+    chart_q = st.empty()
+    chart_w = st.empty()
+    chart_eta = st.empty()
     table_placeholder = st.empty()
-    timer_placeholder = st.empty()
+
     results_list = []
     k = 0
-    start_time = time.time()  # <--- timer
+
+    import time
+    start_time = time.time()
 
     if choix_cycle == "Cycle d'Ericsson":
         Tmin_values = np.linspace(Tmin_min, Tmin_max, Tmin_points)
@@ -171,18 +176,19 @@ if run_study:
                             "Wnet (kJ/kg)": ener.get("W_cycle",0)/1000,
                             "Rendement (%)": ener.get("eta",0)*100
                         })
+
                         df = pd.DataFrame(results_list)
                         table_placeholder.dataframe(df)
-                        chart_placeholder.line_chart(df[["Rendement (%)","Wnet (kJ/kg)","Qin (kJ/kg)"]])
 
-                        # Timer estimé
-                        elapsed = time.time() - start_time
-                        remaining = elapsed / (k+1) * (total - (k+1))
-                        timer_placeholder.text(f"Temps estimé restant : {int(remaining)} s")
+                        # Graphiques en temps réel
+                        chart_q.line_chart(df[["Qin (kJ/kg)","Qout (kJ/kg)"]])
+                        chart_w.line_chart(df[["Wnet (kJ/kg)"]])
+                        chart_eta.line_chart(df[["Rendement (%)"]])
 
                         k += 1
                         progress_bar.progress(int(100*k/total))
-    else:
+
+    else:  # Brayton
         T1_values = np.linspace(T1_min, T1_max, T1_points)
         P1_values = np.linspace(P1_min, P1_max, P1_points)
         PR_values = np.linspace(PR_min, PR_max, PR_points)
@@ -203,14 +209,14 @@ if run_study:
                             "Wnet (kJ/kg)": ener.get("W_net",0)/1000,
                             "Rendement (%)": ener.get("eta",0)*100
                         })
+
                         df = pd.DataFrame(results_list)
                         table_placeholder.dataframe(df)
-                        chart_placeholder.line_chart(df[["Rendement (%)","Wnet (kJ/kg)","Qin (kJ/kg)"]])
 
-                        # Timer estimé
-                        elapsed = time.time() - start_time
-                        remaining = elapsed / (k+1) * (total - (k+1))
-                        timer_placeholder.text(f"Temps estimé restant : {int(remaining)} s")
+                        # Graphiques en temps réel
+                        chart_q.line_chart(df[["Qin (kJ/kg)"]])
+                        chart_w.line_chart(df[["Wnet (kJ/kg)"]])
+                        chart_eta.line_chart(df[["Rendement (%)"]])
 
                         k += 1
                         progress_bar.progress(int(100*k/total))
