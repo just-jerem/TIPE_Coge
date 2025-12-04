@@ -212,3 +212,47 @@ if run_study:
     best = df.loc[idx_max]
     st.subheader("Meilleure configuration")
     st.table(best)
+
+# ================================
+# Import CSV
+# ================================
+st.markdown("---")
+st.header("Importer un CSV pour tracer les résultats existants")
+
+csv_file = st.file_uploader("Choisir un fichier CSV", type=["csv"])
+
+if csv_file is not None:
+    df_csv = pd.read_csv(csv_file)
+    st.subheader("Aperçu des données importées")
+    st.dataframe(df_csv.head())
+
+    # Détection du type de cycle
+    if all(col in df_csv.columns for col in ["Qin (kJ/kg)","Qout (kJ/kg)","Wnet (kJ/kg)","Rendement (%)"]):
+        cycle_csv = "Ericsson"
+        st.info("Cycle détecté : Ericsson")
+    elif all(col in df_csv.columns for col in ["Wcomp (kJ/kg)","Wturb (kJ/kg)","Wnet (kJ/kg)","Qin (kJ/kg)","Rendement (%)"]):
+        cycle_csv = "Brayton"
+        st.info("Cycle détecté : Brayton")
+    else:
+        st.warning("Impossible de détecter le type de cycle automatiquement. Vérifiez les colonnes.")
+        cycle_csv = None
+
+    if cycle_csv is not None:
+        # Tracer graphiques
+        st.subheader("Graphiques à partir du CSV")
+        if cycle_csv == "Ericsson":
+            st.line_chart(df_csv[["Qin (kJ/kg)","Qout (kJ/kg)"]], height=200)
+            st.line_chart(df_csv[["Wnet (kJ/kg)"]], height=200)
+            st.line_chart(df_csv[["Rendement (%)"]], height=200)
+        else:  # Brayton
+            st.line_chart(df_csv[["Wcomp (kJ/kg)","Wturb (kJ/kg)"]], height=200)
+            st.line_chart(df_csv[["Wnet (kJ/kg)"]], height=200)
+            st.line_chart(df_csv[["Rendement (%)"]], height=200)
+
+        # Meilleure configuration
+        idx_max = df_csv["Rendement (%)"].idxmax()
+        best_csv = df_csv.loc[idx_max]
+        st.subheader("Meilleure configuration")
+        st.table(best_csv)
+
+
