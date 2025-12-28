@@ -3,9 +3,10 @@
 ## 1. Cadrage du sujet
 
 - [ ] Titre définitif:
-    *Étude numérique et optimisation d’un système de cogénération basé sur un cycle Ericsson*
+    *Optimisation des cycles thermodynamiques de cogénération : influence des conditions de température et de pression*
 - [ ] Définir la problématique principale:
-    *Comment maximiser le rendement global d’un cycle Ericsson en cogénération ?*
+    *Comment les conditions de température et de pression influencent-elles le rendement des cycles de cogénération (Brayton, Ericsson, Stirling), et quel cycle offre les meilleures performances
+selon les conditions de fonctionnement ?*
 - [ ] Lister les hypothèses du modèle :
   - Cycle idéal dans un premier temps
   - Régime permanent
