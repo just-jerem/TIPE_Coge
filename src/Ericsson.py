@@ -2,46 +2,56 @@ import numpy as np
 import matplotlib.pyplot as plt
 from CoolProp.CoolProp import PropsSI as CP
 import warnings
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
+import os
 
 fluid = "Air"  # fluide de travail
+NUM_WORKERS = min(4, os.cpu_count() or 1)
+
+@lru_cache(maxsize=50000)
+def CP_cached(output, input1, val1, input2, val2, fluid_name):
+    return CP(output, input1, val1, input2, val2, fluid_name)
 
 # ================================
 # FONCTIONS THERMO
 # ================================
 def get_v(T, P):
-    rho = CP("D", "T", T, "P", P, fluid)
+    rho = CP_cached("D", "T", T, "P", P, fluid)
     return 1 / rho
 
 def get_h(T, P):
-    return CP("H", "T", T, "P", P, fluid)
+    return CP_cached("H", "T", T, "P", P, fluid)
 
 def get_s(T, P):
-    return CP("S", "T", T, "P", P, fluid)
+    return CP_cached("S", "T", T, "P", P, fluid)
 
 def isotherm(T, P1, P2, n=200):
     P = np.linspace(P1, P2, n)
-    V = [get_v(T, p) for p in P]
-    s = [get_s(T, p) for p in P]
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        V = list(executor.map(lambda p: get_v(T, p), P))
+        s = list(executor.map(lambda p: get_s(T, p), P))
     T_list = [T]*n
-    return V, P, s, T_list
+    return V, list(P), s, T_list
 
 def isobar(P, T1, T2, n=200):
     T = np.linspace(T1, T2, n)
-    V = [get_v(t, P) for t in T]
-    s = [get_s(t, P) for t in T]
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        V = list(executor.map(lambda t: get_v(t, P), T))
+        s = list(executor.map(lambda t: get_s(t, P), T))
     return V, [P]*n, s, list(T)
 
 def _integrate_PdV(V_list, P_list):
     """
     Intégration numérique ∫ P dV (J/kg).
-    S'assure que V est croissant pour trapz (sinon inverse les tableaux).
+    S'assure que V est croissant pour trapezoid (sinon inverse les tableaux).
     """
     V = np.array(V_list)
     P = np.array(P_list)
     if V[0] > V[-1]:
         V = V[::-1]
         P = P[::-1]
-    return np.trapz(P, V)
+    return np.trapezoid(P, V)
 
 # ================================
 # FONCTION CYCLE ERICSSON (CORRIGÉE)

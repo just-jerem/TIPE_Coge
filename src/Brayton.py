@@ -1,29 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from CoolProp.CoolProp import PropsSI as CP
+from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
+import os
 
 fluid = "Air"
+NUM_WORKERS = min(4, os.cpu_count() or 1)  # Use up to 4 threads
+
+@lru_cache(maxsize=50000)
+def CP_cached(output, input1, val1, input2, val2, fluid_name):
+    return CP(output, input1, val1, input2, val2, fluid_name)
 
 # ================================
 # FONCTIONS THERMO
 # ================================
 def get_v(T, P):
     """Volume spécifique du fluide"""
-    return 1/CP("D","T",T,"P",P,fluid)
+    return 1/CP_cached("D","T",T,"P",P,fluid)
 
 def get_h(T, P):
     """Enthalpie massique"""
-    return CP("H","T",T,"P",P,fluid)
+    return CP_cached("H","T",T,"P",P,fluid)
 
 def get_s(T, P):
     """Entropie massique"""
-    return CP("S","T",T,"P",P,fluid)
+    return CP_cached("S","T",T,"P",P,fluid)
 
 def isobar(P, T1, T2, n=200):
     """Transformation isobare entre deux températures"""
     T = np.linspace(T1,T2,n)
-    V = [get_v(t,P) for t in T]
-    s = [get_s(t,P) for t in T]
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        V = list(executor.map(lambda t: get_v(t,P), T))
+        s = list(executor.map(lambda t: get_s(t,P), T))
     return V, [P]*n, s, list(T)
 
 def isentropic(S, P1, P2, n=200):
@@ -32,10 +41,12 @@ def isentropic(S, P1, P2, n=200):
     Retourne V, P, s, T
     """
     P = np.linspace(P1,P2,n)
-    T = [CP("T","P",p,"S",S,fluid) for p in P]
-    V = [get_v(t,p) for t,p in zip(T,P)]
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        T = list(executor.map(lambda p: CP_cached("T","P",p,"S",S,fluid), P))
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        V = list(executor.map(lambda args: get_v(args[0],args[1]), zip(T,P)))
     s = [S]*n
-    return V, P, s, T
+    return V, list(P), s, T
 
 # ================================
 # FONCTION CYCLE BRAYTON
