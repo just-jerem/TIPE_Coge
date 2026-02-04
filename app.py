@@ -84,11 +84,11 @@ def create_overlay_chart(all_results, metric_col, metric_label, unit_labels, y_t
     points = line.mark_circle(size=120, filled=True).encode(
         opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
         tooltip=[
-            alt.Tooltip("Paramètre:N", title="🔧 Paramètre"),
-            alt.Tooltip("Valeur affichée:Q", title="📊 Valeur", format=".2f"),
+            alt.Tooltip("Paramètre:N", title="Paramètre"),
+            alt.Tooltip("Valeur affichée:Q", title="Valeur", format=".2f"),
             alt.Tooltip("Unité:N", title="Unité"),
-            alt.Tooltip("Métrique:Q", title=f"📈 {metric_label}", format=".2f"),
-            alt.Tooltip("Progression (%):Q", title="📍 Progression", format=".1f")
+            alt.Tooltip("Métrique:Q", title=f"{metric_label}", format=".2f"),
+            alt.Tooltip("Progression (%):Q", title="Progression", format=".1f")
         ]
     ).add_params(nearest)
     
@@ -356,16 +356,16 @@ with st.expander("Paramètres étude paramétrique", expanded=True):
 # ========================================
 # LANCER L'ETUDE PARAMETRIQUE
 # ========================================
-run_study = st.button("🚀 Lancer l'étude paramétrique")
+run_study = st.button("Lancer l'étude paramétrique")
 
 if run_study:
     if not params_to_vary:
-        st.error("❌ Veuillez sélectionner au moins un paramètre à faire varier")
+        st.error("Veuillez sélectionner au moins un paramètre à faire varier")
     else:
         # ----------------------------------------
         # Initialisation de la simulation
         # ----------------------------------------
-        st.info("⏳ Simulation en cours...")
+        st.info("Simulation en cours...")
         progress_bar = st.progress(0)
         timer_placeholder = st.empty()
         table_placeholder = st.empty()
@@ -434,7 +434,7 @@ if run_study:
             # ========================================
             # AFFICHAGE DES VALEURS OPTIMALES
             # ========================================
-            st.subheader("✨ Valeurs optimales par paramètre")
+            st.subheader("Valeurs optimales par paramètre")
             optimal_data = []
             for param_name, df in all_results.items():
                 idx_best = df["Rendement (%)"].idxmax()
@@ -452,7 +452,7 @@ if run_study:
             # ========================================
             # GRAPHIQUES SUPERPOSES (Ericsson)
             # ========================================
-            st.subheader("📈 Graphiques superposés")
+            st.subheader("Graphiques superposés")
             
             # Unités pour chaque paramètre
             unit_labels = {"T_min": "K", "T_max": "K", "P_min": "bar", "P_max": "bar"}
@@ -478,7 +478,7 @@ if run_study:
             chart_eta = create_overlay_chart(all_results, "Rendement (%)", "Rendement", unit_labels, "Rendement (%)")
             st.altair_chart(chart_eta, use_container_width=True)
             
-            st.caption("💡 Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
+            st.caption("Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
         
         elif choix_cycle == "Cycle de Stirling":
             # ----------------------------------------
@@ -543,7 +543,7 @@ if run_study:
             # ========================================
             # AFFICHAGE DES VALEURS OPTIMALES (Stirling)
             # ========================================
-            st.subheader("✨ Valeurs optimales par paramètre")
+            st.subheader("Valeurs optimales par paramètre")
             optimal_data = []
             for param_name, df in all_results.items():
                 idx_best = df["Rendement (%)"].idxmax()
@@ -563,7 +563,7 @@ if run_study:
             # ========================================
             # GRAPHIQUES SUPERPOSES (Stirling)
             # ========================================
-            st.subheader("📈 Graphiques superposés")
+            st.subheader("Graphiques superposés")
             
             # Unités pour chaque paramètre
             unit_labels = {"T_min": "K", "T_max": "K", "V_min": "m³/kg", "V_max": "m³/kg"}
@@ -589,7 +589,7 @@ if run_study:
             chart_eta = create_overlay_chart(all_results, "Rendement (%)", "Rendement", unit_labels, "Rendement (%)")
             st.altair_chart(chart_eta, use_container_width=True)
             
-            st.caption("💡 Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
+            st.caption("Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
         
         else:  # Brayton
             # ----------------------------------------
@@ -653,7 +653,7 @@ if run_study:
             # ========================================
             # AFFICHAGE DES VALEURS OPTIMALES
             # ========================================
-            st.subheader("✨ Valeurs optimales par paramètre")
+            st.subheader("Valeurs optimales par paramètre")
             optimal_data = []
             for param_name, df in all_results.items():
                 idx_best = df["Rendement (%)"].idxmax()
@@ -672,7 +672,7 @@ if run_study:
             # ========================================
             # GRAPHIQUES SUPERPOSES (Brayton)
             # ========================================
-            st.subheader("📈 Graphiques superposés")
+            st.subheader("Graphiques superposés")
             
             # Unités pour chaque paramètre
             unit_labels = {"T1": "K", "T3": "K", "P1": "bar", "Ratio de pression": ""}
@@ -704,12 +704,12 @@ if run_study:
             chart_eta = create_overlay_chart(all_results, "Rendement (%)", "Rendement", unit_labels, "Rendement (%)")
             st.altair_chart(chart_eta, use_container_width=True)
             
-            st.caption("💡 Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
+            st.caption("Survolez les graphiques pour voir les valeurs exactes. Tous les paramètres s'affichent au même point.")
         
         # ========================================
         # EXPORT DES DONNEES EN CSV
         # ========================================
-        st.subheader("💾 Télécharger les données")
+        st.subheader("Télécharger les données")
         combined_results = []
         for param_name, df in all_results.items():
             combined_results.append(df)
