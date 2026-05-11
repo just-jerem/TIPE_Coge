@@ -1,0 +1,179 @@
+% ============================================================
+%  SLIDES EXPÉRIMENTALES — à insérer dans tipe_cogeneration.tex
+%  REMPLACE les deux slides "Perspectives expérimentales (1/2)" et
+%  "Perspectives expérimentales (2/2)" (lignes 1308–1409)
+%
+%  Moteur Stirling Jeulin 204081 — ExAO Foxy — Jérémie Prouteau
+%
+%  Nécessite dans le préambule :
+%    \usepackage{graphicx}   (déjà présent)
+%    \usepackage{pgfplots}   (déjà présent)
+%    \pgfplotsset{compat=1.18}
+%
+%  Figures à placer dans fig/ :
+%    fig/stirling_PV.pdf        ← diagramme P-V mesuré (script Python)
+%    fig/stirling_labo.jpg      ← photo du montage (vos photos)
+%    fig/stirling_eta_comp.pdf  ← graphe η_exp vs η_Carnot vs η_modèle
+%                                  (optionnel — placeholder sinon)
+% ============================================================
+
+%% ── Expérience Stirling : dispositif ────────────────────────
+\begin{frame}{Validation exp\'erimentale --- Moteur Stirling de laboratoire}
+  \framesubtitle{Moteur Jeulin 204081 (3B Scientific) --- ExAO Foxy}
+
+  \begin{columns}[T]
+    \column{0.52\textwidth}
+      \begin{block}{Dispositif exp\'erimental}
+        \small
+        \begin{itemize}\itemsep3pt
+          \item Moteur Stirling alpha transparent
+                (cylindre en verre thermorésistant)
+          \item Source chaude : r\'echaud \`a alcool
+          \item Capteur PV Stirling Jeulin +
+                interface ExAO Foxy~: acquisition
+                en temps r\'eel de $P(t)$ et $V(t)$
+          \item Thermocouple type~K pour $T_{\text{chaud}}$
+                et $T_{\text{froid}}$
+        \end{itemize}
+      \end{block}
+
+      \vspace{0.4em}
+      \begin{block}{Caract\'eristiques du moteur}
+        \scriptsize
+        \renewcommand{\arraystretch}{1.15}
+        \begin{tabular}{@{}ll@{}}
+          \toprule
+          Param\`etre & Valeur \\
+          \midrule
+          $V_{\min}$ / $V_{\max}$ & 32 / 44\,cm$^3$ \\
+          $\rv = V_{\max}/V_{\min}$ & \textbf{1{,}375} \\
+          Puissance nominale & 1{,}5\,W \\
+          Vitesse au ralenti & $\approx$\,1\,000\,tr/min \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+    \column{0.44\textwidth}
+      \begin{center}
+        % ── Remplacer par votre photo ──────────────────────
+        \includegraphics[width=0.95\linewidth]{fig/stirling_labo.jpg}
+        % \fbox{\rule{0pt}{3.2cm}\rule{3.8cm}{0pt}}
+        \\[3pt]
+        \small Montage ExAO --- r\'ef.\ 204081
+      \end{center}
+  \end{columns}
+
+\end{frame}
+
+%% ── Diagramme P-V mesuré ─────────────────────────────────────
+\begin{frame}{Diagramme P-V exp\'erimental du cycle de Stirling}
+  \framesubtitle{342 points acquis via ExAO Foxy ---
+    $T_{\text{démarrage}} = 124\,\text{\textdegree C}$,
+    $T_{\text{max}} = 228\,\text{\textdegree C}$}
+
+  \begin{columns}[T]
+    \column{0.58\textwidth}
+      \begin{center}
+        % ── Insérer la figure générée par le script Python ─
+        \includegraphics[width=\linewidth]{fig/stirling_PV.pdf}
+        % \fbox{\rule{0pt}{4.5cm}\rule{5.8cm}{0pt}}
+        \\[-2pt]
+        \tiny Diagramme de Clapeyron mesuré (P en mbar, V en cm$^3$)
+      \end{center}
+
+    \column{0.38\textwidth}
+      \begin{block}{Lecture du diagramme}
+        \small
+        \textbf{Branche haute} (rouge) :\\
+        d\'etente \`a $T_{\max} = 228\,$\textdegree C.\\[4pt]
+        \textbf{Branche basse} (bleu) :\\
+        compression \`a $T_{\min}$.\\[4pt]
+        \textbf{Aire du cycle} :\\
+        \[
+          \Wnet = \oint P\,dV
+        \]
+      \end{block}
+
+      \vspace{0.3em}
+      \begin{alertblock}{Valeurs mesur\'ees}
+        \small
+        $\rv^{\text{exp}} = 1{,}368$\\[2pt]
+        $\Delta P = P_{\text{haut}} - P_{\text{bas}}$\\
+        $\phantom{\Delta P} \approx 246\,$mbar\\[2pt]
+        $\Wnet \approx \mathbf{323\,\text{mJ}}$
+      \end{alertblock}
+
+      \vspace{0.3em}
+      \begin{exampleblock}{}
+        \small
+        $\etaC = 1 - \dfrac{397}{501} \approx \mathbf{20{,}8\,\%}$\\[2pt]
+        {\footnotesize ($T_{\min}$ = temp.\,d\'emarrage)}
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Comparaison modèle / expérience ─────────────────────────
+\begin{frame}{Confrontation mod\`ele -- mesure}
+  \framesubtitle{Identification de l'efficacit\'e du r\'eg\'en\'erateur $\varepsilon$}
+
+  \begin{columns}[T]
+    \column{0.50\textwidth}
+      \begin{block}{Mod\`ele CoolProp ($\rv = 1{,}368$)}
+        \small
+        Avec $T_{\min} = 397$\,K, $T_{\max} = 501$\,K,
+        $\rv = 1{,}368$ et $\varepsilon$ identifi\'e :
+        \[
+          Q_{\text{in,eff}} = Q_{34}
+            + (1-\varepsilon)\,Q_{\text{23,r\'eg}}
+        \]
+        \[
+          \eta_{\text{mod}} = \frac{\Wnet}{Q_{\text{in,eff}}}
+          < \etaC
+        \]
+      \end{block}
+
+      \vspace{0.4em}
+      \begin{block}{Bilan num\'erique}
+        \scriptsize
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{@{}lc@{}}
+          \toprule
+          Grandeur & Valeur \\
+          \midrule
+          $\etaC$ & 20{,}8\,\% \\
+          $\eta_{\text{mod}}$ ($\varepsilon = 0{,}85$) & $\approx$\,12\,\% \\
+          $\Wnet$ (ExAO) & 323\,mJ/cycle \\
+          $\rv^{\text{exp}}$ & 1{,}368 \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+    \column{0.46\textwidth}
+      \begin{center}
+        % ── Graphe η_exp vs η_Carnot vs η_modèle (optionnel) ─
+        \includegraphics[width=\linewidth]{fig/stirling_eta_comp.pdf}
+        % \fbox{\rule{0pt}{3.8cm}\rule{4.4cm}{0pt}}
+        \\[-2pt]
+        \tiny $\eta$ en fonction de $T_{\max}$ ---
+              mod\`ele CoolProp vs Carnot
+      \end{center}
+
+      \vspace{0.3em}
+      \begin{alertblock}{Conclusion exp\'erimentale}
+        \small
+        Le faible $\rv = 1{,}37$ est le facteur
+        \textbf{limitant principal} :
+        $\Wnet \propto \ln \rv$ est petit.\\[3pt]
+        L'\'ecart $\etaC - \eta_{\text{mod}}$ quantifie
+        les irr\'eversibilit\'es r\'eelles
+        (r\'eg\'en\'eration imparfaite, frottements).
+      \end{alertblock}
+  \end{columns}
+
+\end{frame}
+
+% ============================================================
+%  FIN DES SLIDES EXPÉRIMENTALES
+%  La suite (appendix + annexes) reste inchangée
+% ============================================================

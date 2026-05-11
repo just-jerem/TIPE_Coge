@@ -1,0 +1,2861 @@
+% ============================================================
+%  TIPE PSI — Optimisation des cycles thermodynamiques
+%  de cogénération : influence des conditions de T et P
+%  Jérémie Prouteau — N° 22852 — 2026
+% ============================================================
+
+\documentclass[aspectratio=43, 10pt]{beamer}
+
+% ────────────────────────────────────────────────────────────
+%  PACKAGES
+% ────────────────────────────────────────────────────────────
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, calc, positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{hyperref}
+\usepackage{appendixnumberbeamer}
+\usepackage{listings}
+
+% ────────────────────────────────────────────────────────────
+%  COULEURS
+% ────────────────────────────────────────────────────────────
+\definecolor{bleuMarine} {RGB}{ 26,  58, 107}
+\definecolor{bleuNav}    {RGB}{ 46,  95, 163}
+\definecolor{bleuPale}   {RGB}{210, 225, 245}
+\definecolor{vertCycle}  {RGB}{ 30, 132,  73}
+\definecolor{rougeCycle} {RGB}{192,  57,  43}
+\definecolor{orangeAcc}  {RGB}{211, 105,   0}
+\definecolor{grisTexte}  {RGB}{ 50,  50,  60}
+\definecolor{grisFooter} {RGB}{ 15,  36,  71}
+\definecolor{blancCasse} {RGB}{244, 247, 251}
+
+\providecommand{\degre}{\textsuperscript{o}}
+\renewcommand{\degre}{\textsuperscript{o}}
+
+\lstset{
+  basicstyle=\ttfamily\tiny,
+  keywordstyle=\color{bleuNav}\bfseries,
+  commentstyle=\color{vertCycle},
+  stringstyle=\color{rougeCycle},
+  backgroundcolor=\color{blancCasse},
+  frame=single, framerule=0.4pt,
+  breaklines=true, language=Python,
+  showstringspaces=false
+}
+
+% ────────────────────────────────────────────────────────────
+%  THEME
+% ────────────────────────────────────────────────────────────
+\usetheme{Madrid}
+\usecolortheme[named=bleuMarine]{structure}
+
+\setbeamercolor{background canvas}   {bg=blancCasse}
+\setbeamercolor{block title}         {bg=bleuMarine, fg=white}
+\setbeamercolor{block body}          {bg=bleuPale,   fg=grisTexte}
+\setbeamercolor{block title alerted} {bg=rougeCycle, fg=white}
+\setbeamercolor{block body alerted}  {bg=red!7,      fg=grisTexte}
+\setbeamercolor{block title example} {bg=vertCycle,  fg=white}
+\setbeamercolor{block body example}  {bg=green!7,    fg=grisTexte}
+\setbeamercolor{author in head/foot} {bg=grisFooter, fg=white}
+\setbeamercolor{title in head/foot}  {bg=bleuNav,    fg=white}
+\setbeamercolor{date in head/foot}   {bg=bleuMarine, fg=white}
+\setbeamercolor{frametitle}          {bg=bleuMarine, fg=white}
+
+\usefonttheme{professionalfonts}
+\setbeamerfont{title}         {size=\Large,     series=\bfseries}
+\setbeamerfont{frametitle}    {size=\normalsize,series=\bfseries}
+\setbeamerfont{framesubtitle} {size=\small,     series=\normalfont}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}     {\textcolor{bleuNav}{\textbullet}}
+\setbeamertemplate{itemize subitem}  {\textcolor{orangeAcc}{$\circ$}}
+
+% ────────────────────────────────────────────────────────────
+%  PAS DE HEADER
+% ────────────────────────────────────────────────────────────
+
+% ────────────────────────────────────────────────────────────
+%  BANDEAU NAVIGATION
+% ────────────────────────────────────────────────────────────
+\useoutertheme[subsection=false]{miniframes}
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[wd=\paperwidth,ht=3.2ex,dp=4.8ex]{section in head/foot}
+    \insertnavigation{\paperwidth}
+  \end{beamercolorbox}%
+}
+
+
+% ────────────────────────────────────────────────────────────
+%  FOOTER
+% ────────────────────────────────────────────────────────────
+\makeatletter
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.4ex,dp=1.1ex,leftskip=2ex]{author in head/foot}%
+      \usebeamerfont{author in head/foot}%
+      \textbf{Prouteau J\'er\'emie}\enspace N\degre\,22852%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.50\paperwidth,ht=2.4ex,dp=1.1ex,center]{title in head/foot}%
+      \usebeamerfont{title in head/foot}Optimisation \& Cog\'en\'eration%
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.4ex,dp=1.1ex,right,rightskip=2ex]{date in head/foot}%
+      \usebeamerfont{date in head/foot}%
+      2026\quad\insertframenumber\,/\,\inserttotalframenumber%
+    \end{beamercolorbox}%
+  }\vskip0pt%
+}
+\makeatother
+
+% ────────────────────────────────────────────────────────────
+%  FRAMETITLE  (sous-titre sur ligne séparée, hauteur auto)
+% ────────────────────────────────────────────────────────────
+\makeatletter
+\setbeamertemplate{frametitle}{%
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth,sep=0pt,leftskip=8pt,rightskip=6pt]{frametitle}%
+    \vskip1.0ex%
+    \usebeamerfont{frametitle}\insertframetitle%
+    \ifx\insertframesubtitle\@empty\else
+      \par\vskip0.3ex%
+      {\usebeamerfont{framesubtitle}%
+       \usebeamercolor[fg]{framesubtitle}%
+       \textit{\insertframesubtitle}}%
+    \fi
+    \vskip1.5ex%
+  \end{beamercolorbox}%
+}
+\makeatother
+
+% ────────────────────────────────────────────────────────────
+%  SOMMAIRE — sans sous-sections
+% ────────────────────────────────────────────────────────────
+
+
+% ────────────────────────────────────────────────────────────
+%  COMMANDES UTILITAIRES
+% ────────────────────────────────────────────────────────────
+\newcommand{\eqbox}[1]{\begin{block}{}\centering$\displaystyle #1$\end{block}}
+\newcommand{\resultbox}[2][R\'esultat cl\'e]{%
+  \begin{alertblock}{#1}\centering$\displaystyle #2$\end{alertblock}}
+\newcommand{\exbox}[2][\`A retenir]{%
+  \begin{exampleblock}{#1}\centering$\displaystyle #2$\end{exampleblock}}
+
+% Raccourcis notations
+\newcommand{\Tmin}{T_{\min}}
+\newcommand{\Tmax}{T_{\max}}
+\newcommand{\Pmin}{P_{\min}}
+\newcommand{\Pmax}{P_{\max}}
+\newcommand{\rp}{\alpha_p}
+\newcommand{\rv}{\alpha_v}
+\newcommand{\etaC}{\eta_{\text{Carnot}}}
+\newcommand{\Wnet}{W_{\text{net}}}
+\newcommand{\Qin}{Q_{\text{in}}}
+\newcommand{\Qout}{Q_{\text{out}}}
+
+% ────────────────────────────────────────────────────────────
+%  MÉTADONNÉES
+% ────────────────────────────────────────────────────────────
+\title[Optimisation \& Cog\'en\'eration]{%
+  \texorpdfstring{%
+    Optimisation des cycles thermodynamiques de cog\'en\'eration \\[4pt]
+    {\normalsize\normalfont
+     Influence des conditions de temp\'erature et de pression}%
+  }{Optimisation des cycles thermodynamiques de cogeneration}}
+
+\author[Prouteau J. --- N\degre\,22852]{%
+  \texorpdfstring{%
+    J\'er\'emie \textbf{Prouteau}\\[2pt]
+    \small PSI --- N\degre\,22852%
+  }{Jeremie Prouteau, PSI, N22852}}
+
+\institute{}
+\date{2026}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ────────────────────────────────────────────────────────────
+%  TITRE
+% ────────────────────────────────────────────────────────────
+{
+\setbeamertemplate{footline}{}
+\begin{frame}[noframenumbering,plain]
+  \titlepage
+  \vspace{-0.8em}
+\end{frame}
+}
+
+% ────────────────────────────────────────────────────────────
+%  SOMMAIRE GÉNÉRAL
+% ────────────────────────────────────────────────────────────
+\begin{frame}{Sommaire}
+  \tableofcontents[subsectionstyle=hide]
+\end{frame}
+
+% ============================================================
+\section{Introduction \& Probl\'ematique}
+% ============================================================
+
+%% ── Notations ─────────────────────────────────────────────
+\begin{frame}{Notations et conventions}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+      \begin{block}{Grandeurs thermodynamiques}
+        \scriptsize
+        \renewcommand{\arraystretch}{1.1}
+        \begin{tabular}{@{}lll@{}}
+          \toprule
+          Symbole & Grandeur & Unit\'e \\
+          \midrule
+          $T$       & Temp\'erature           & K \\
+          $P$       & Pression                & Pa\\
+          $v$       & Volume sp\'ecifique     & m$^3$/kg \\
+          $h$       & Enthalpie massique      & J/kg \\
+          $s$       & Entropie massique       & J/(kg\,K) \\
+          $\Wnet$   & Travail net massique    & J/kg \\
+          $\Qin$    & Chaleur re\c{c}ue       & J/kg \\
+          $\eta$    & Rendement thermique     & --- \\
+          $\etaC$   & Rendement de Carnot     & --- \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+    \column{0.44\textwidth}
+      \begin{block}{Param\`etres cycles}
+        \scriptsize
+        \renewcommand{\arraystretch}{1.1}
+        \begin{tabular}{ll}
+          \toprule
+          Symbole & D\'efinition \\
+          \midrule
+          $\Tmin$, $T_1$           & Temp\'erature froide \\
+          $\Tmax$, $T_3$           & Temp\'erature chaude \\
+          $\rp = \alpha_p$      & Rapport de pression \\
+          $\rv = \alpha_v$& Rapport de volume \\
+          $\varepsilon$            & Efficacit\'e du r\'eg\'en. \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+      \vspace{0.3em}
+      \begin{exampleblock}{\footnotesize Air --- r\'ef\'erence}
+        \footnotesize
+        $r \approx 287$\,J/kg/K\\
+        $\gamma \approx 1{,}4$\\
+        $C_p \approx 1005$\,J/kg/K \textit{(300\,K)}
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Définition cogénération + nécessité ────────────────────
+\begin{frame}{La cog\'en\'eration : d\'efinition et n\'ecessit\'e}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.44\textwidth}
+      \begin{block}{D\'efinition}
+        \small
+        Production \textbf{simultan\'ee} d'\'electricit\'e
+        et de chaleur utile \`a partir d'une
+        \textbf{unique source}, en valorisant $\Qout$.
+      \end{block}
+      \vspace{0.5em}
+      \begin{center}
+      \begin{tikzpicture}[
+          b/.style={rectangle,draw=bleuMarine,fill=bleuPale,rounded corners=2pt,
+                    minimum height=1.0em,minimum width=1.55cm,
+                    font=\scriptsize,align=center},
+          f/.style={-Stealth,semithick,bleuNav}
+        ]
+        \node[b,fill=brown!20]  (src) at (0,0)    {Source\\\tiny primaire};
+        \node[b]                (cy)  at (1.9,0)   {Cycle\\\tiny thermo.};
+        \node[b,fill=yellow!20] (el)  at (3.8,0)   {$\Wnet$\\\tiny \'{E}lect.};
+        \node[b,fill=green!20]  (ec)  at (1.9,-1.2){\'Ech.};
+        \node[b,fill=green!10]  (us)  at (3.8,-1.2){Chaleur\\\tiny utile};
+        \draw[f](src)--node[above,font=\tiny]{$\Qin$}(cy);
+        \draw[f](cy)--node[above,font=\tiny]{$W$}(el);
+        \draw[f](cy)--node[right,font=\tiny]{$\Qout$}(ec);
+        \draw[f](ec)--node[above,font=\tiny]{val.}(us);
+      \end{tikzpicture}
+      \end{center}
+
+    \column{0.52\textwidth}
+      \begin{block}{Bilan compar\'e}
+        \small
+        \begin{tabular}{lc}
+          \toprule
+          Syst\`eme & $\eta_{\text{global}}$ \\
+          \midrule
+          Centrale classique    & 33--40\,\% \\
+          \textbf{Cog\'en\'eration} & \textbf{80--90\,\%} \\
+          \bottomrule
+        \end{tabular}\\[3pt]
+        \small\textbf{Sur 100\,kWh primaires :}\\
+        Centrale : 35\,kWh + 65\,kWh perdus\\
+        Cog\'en\'eration : 40 + 45\,kWh valoris\'es
+      \end{block}
+
+      \vspace{0.35em}
+      \begin{exampleblock}{2\textsuperscript{e} principe}
+        \small
+        $E_x = \Qout\!\left(1-\frac{T_0}{T_\text{cond}}\right)$\\[2pt]
+        Rejeter $\Qout$ d\'etruit irr\'eversiblement
+        sa valeur : la cog\'en\'eration l'exploite.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Problématique + 3 cycles ───────────────────────────────
+\begin{frame}{Probl\'ematique et cycles \'etudi\'es}
+
+  \begin{alertblock}{Probl\'ematique}
+    \centering
+    \textit{Comment les conditions de temp\'erature et de pression
+    ($\Tmin$, $\Tmax$, $\Pmin$, $\Pmax$)
+    influencent-elles le rendement et la puissance sp\'ecifique
+    des cycles thermodynamiques de cog\'en\'eration ?}
+  \end{alertblock}
+
+  \vspace{0.9em}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.31\textwidth}
+      \begin{block}{\textcolor{rougeCycle}{Brayton}}
+        \small
+        Isentropique + Isobare\\[4pt]
+        Cycle de r\'ef\'erence\\
+        (turbine \`a gaz)\\[4pt]
+        $\eta$ d\'epend de $\rp$
+      \end{block}
+
+    \column{0.31\textwidth}
+      \begin{block}{\textcolor{bleuPale}{Ericsson}}
+        \small
+        Isotherme + Isobare\\[4pt]
+        Turbomachine \`a\\
+        flux continu\\[4pt]
+        $\eta = \etaC$ (avec r\'eg.)
+      \end{block}
+
+    \column{0.31\textwidth}
+      \begin{block}{\textcolor{vertCycle}{Stirling}}
+        \small
+        Isotherme + Isochore\\[4pt]
+        Moteur \`a pistons\\
+        alternatifs\\[4pt]
+        $\eta = \etaC$ (avec r\'eg.)
+      \end{block}
+  \end{columns}
+
+  \vspace{0.7em}
+  \begin{exampleblock}{}
+    \small
+    Les trois cycles sont \'etudi\'es avec \textbf{combustion externe} ---
+    le fluide de travail est l'air, chauff\'e via un \'echangeur.
+    Ce mode est compatible avec toute source thermique industrielle.
+  \end{exampleblock}
+
+\end{frame}
+
+% ============================================================
+\section{Mod\'elisation th\'eorique}
+% ============================================================
+
+%% ── Rappels thermo (cadre + transformations sur une slide) ─
+\begin{frame}{Cadre thermodynamique}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \textbf{Conventions}
+      \begin{itemize}\small
+        \item 1\,kg de fluide (grandeurs massiques)
+        \item R\'egime permanent : $\oint \mathrm{d}U = 0$
+        \item Fluide : Air
+      \end{itemize}
+
+      \eqbox{\Wnet = \Qin - \Qout}
+      \vspace{0.5em}
+      \eqbox{\eta = \frac{\Wnet}{\Qin} = 1 - \frac{\Qout}{\Qin}}
+      \vspace{0.5em}
+      \resultbox[Borne de Carnot]{%
+        \eta \leq \etaC = 1 - \frac{\Tmin}{\Tmax}}
+
+    \column{0.48\textwidth}
+      \begin{block}{Transformations cl\'es --- gaz parfait}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{ll}
+          \toprule
+          Isobare & $\Delta s = C_p\ln(T_f/T_i)$ \\
+          Isochore & $\Delta s = C_v\ln(T_f/T_i)$ \\
+          Isotherme & $W = rT\ln(v_f/v_i)$ \\
+          Isentropique & $T_f/T_i = (P_f/P_i)^{(\gamma-1)/\gamma}$ \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+      \vspace{0.55em}
+      \begin{block}{Diagramme T-s}
+        \small
+        Chaleur $Q = \int T\,\mathrm{d}s$
+        $\Rightarrow$ aire sous la courbe\\
+        Travail net $= $ aire du cycle ferm\'e
+      \end{block}
+
+      \vspace{0.2em}
+      \begin{exampleblock}{}
+        \small
+        D\'emonstrations compl\`etes :
+        Annexes A1--A3
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Brayton (1/2) ───────────────────────────────────────────
+\begin{frame}{Cycle de Brayton }
+  \framesubtitle{Description des transformations}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{block}{Transformations du cycle}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{clc}
+          \toprule
+          & Transformation & Cste \\
+          \midrule
+          $1\!\to\!2$ & Compression isentropique      & $\text{s} $\\
+          $2\!\to\!3$ & Chauffage Isobare $^*$ & $\Pmax$ \\
+          $3\!\to\!4$ & D\'etente isentropique        & $\text{s} $\\
+          $4\!\to\!1$ & Refroidissement isobare$^*$ & $\Pmin$ \\
+          \bottomrule
+          \multicolumn{3}{l}{\tiny $^*$ via le r\'eg\'en\'erateur}
+        \end{tabular}
+      \end{block}
+
+    \column{0.46\textwidth}
+      \begin{exampleblock}{Points remarquables}
+        \small
+        $T_1$ : entr\'ee compresseur (temp.\ froide)\\[6pt]
+        $T_3$ : sortie chambre de combustion (temp.\ chaude)\\[6pt]
+        Relation isentropique (Annexe~A3) :\\[4pt]
+        \[
+          \frac{T_2}{T_1} = \frac{T_3}{T_4}
+          = \alpha_p^{\,(\gamma-1)/\gamma}
+        \]
+      \end{exampleblock}
+      \begin{block}{}
+         \small
+         \textit{Note : Les diagrammes comparatifs de tous les cycles sont regroup\'es \`a la fin de cette partie.}
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+%% ── Ericsson (transformations + résultat) ───────────────────
+\begin{frame}{Cycle d'Ericsson (1/2)}
+  \framesubtitle{Transformations et travail net}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{block}{Transformations du cycle}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{clc}
+          \toprule
+          & Transformation & Cste \\
+          \midrule
+          $1\!\to\!2$ & Compression isotherme      & $\Tmin$ \\
+          $2\!\to\!3$ & Chauffage isobare$^*$ & $\Pmax$ \\
+          $3\!\to\!4$ & D\'etente isotherme        & $\Tmax$ \\
+          $4\!\to\!1$ & Refroidissement isobare$^*$ & $\Pmin$ \\
+          \bottomrule
+          \multicolumn{3}{l}{\tiny $^*$ via le r\'eg\'en\'erateur}
+        \end{tabular}
+      \end{block}
+
+    \column{0.46\textwidth}
+      \small Sur l'isotherme $T$ (gaz parfait, $Pv=rT$) :\\
+      $W = rT\ln(P_i/P_f)$
+      \begin{align*}\small
+        W_{12} &= -r\Tmin\ln\alpha_p < 0 \\
+        W_{34} &= +r\Tmax\ln\alpha_p > 0
+      \end{align*}
+
+      \vspace{0.5em}
+      \resultbox[Travail net]{%
+        \Wnet = r(\Tmax-\Tmin)\ln\alpha_p}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Cycle d'Ericsson (2/2)}
+  \framesubtitle{Propri\'et\'e cl\'e}
+  
+  \begin{exampleblock}{Propri\'et\'e cl\'e}
+    \normalsize
+    $\Wnet \propto \ln\alpha_p$ : croissance monotone.\\[2pt]
+    $\Wnet$ \textbf{augmente ind\'efiniment} avec le rapport de pression $\alpha_p=\Pmax/\Pmin$\\[2pt]
+    Et cela \textbf{sans modifier le th\'eor\`eme de Carnot} ($\eta = 1 - \Tmin/\Tmax$).\\[2pt]
+    $\Rightarrow$ \textbf{S\'eparation totale} entre optimisation de la puissance et du rendement.
+  \end{exampleblock}
+
+  \vspace{2em}
+  \begin{block}{}
+     \small
+     \textit{Note : Les diagrammes de tous les cycles sont regroup\'es en fin de section.}
+  \end{block}
+\end{frame}
+
+%% ── Ericsson (rendement = Carnot) ───────────────────────────
+%% __ Stirling (transformations + travail net) ─────────────────
+\begin{frame}{Cycle de Stirling (1/2)}
+  \framesubtitle{Description des transformations}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+      \begin{block}{Transformations du cycle}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{clc}
+          \toprule
+          & Transformation & Cste \\
+          \midrule
+          $1\!\to\!2$ & Compression isotherme      & $\Tmin$ \\
+          $2\!\to\!3$ & Chauffage isochore$^*$ & $V_{min}$ \\
+          $3\!\to\!4$ & D\'etente isotherme        & $\Tmax$ \\
+          $4\!\to\!1$ & Refroidissement isochore$^*$ & $V_{max}$ \\
+          \bottomrule
+          \multicolumn{3}{l}{\tiny $^*$ via le r\'eg\'en\'erateur}
+        \end{tabular}
+      \end{block}
+
+    \column{0.44\textwidth}
+      \begin{exampleblock}{Propri\'et\'e des isochores}
+        \normalsize
+        Sur un isochore ($dV = 0$) :\\[4pt]
+        $\delta W = P\,dV = 0$, \textbf{pas de travail}.\\[6pt]
+        $Q_{23} = C_v(\Tmax - \Tmin) > 0$\\[4pt]
+        $Q_{41} = C_v(\Tmin - \Tmax) < 0$
+      \end{exampleblock}
+      
+      \vspace{1em}
+      \small
+      Le r\'eg\'en\'erateur stocke $Q_{23}$ puis le
+      restitue lors de $Q_{41}$ :
+      aucun \'echange ext\'erieur de chaleur sur ces \'etapes.
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Cycle de Stirling (2/2)}
+  \framesubtitle{Calcul du travail net}
+
+  \begin{block}{Calcul du travail net}
+    \normalsize
+    Seules les isothermes fournissent du travail.
+    (Pour un gaz parfait : $dU = 0$ sur une isotherme) :\\[8pt]
+    D\'etente $3\!\to\!4$ \`a $\Tmax$ :\\
+    $W_{34} = r\Tmax\ln(\alpha_v) > 0$\\[8pt]
+    Compression $1\!\to\!2$ \`a $\Tmin$ :\\
+    $W_{12} = r\Tmin\ln(1/\alpha_v) < 0$
+  \end{block}
+
+  \vspace{1em}
+  \resultbox[Travail net total]{%
+    \Wnet = r(\Tmax-\Tmin)\ln\alpha_v}
+\end{frame}
+
+%% ── Diagrammes PV/Ts ─────────────────────────────────────────
+\begin{frame}{Diagrammes P-V et T-s des trois cycles}
+  \framesubtitle{$T_1\!=\!300$\,K, $T_\text{chaud}\!=\!1100$\,K, $\Pmin\!=\!2$\,bar, $\Pmax\!=\!20$\,bar, $r_v\!=\!3{,}3$ (Stirling)}
+
+  \begin{columns}[c,onlytextwidth]
+    \column{0.32\textwidth}\centering
+      \textcolor{rougeCycle}{\textbf{Brayton}}\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Braytonpv.png}\\[1pt]
+      \tiny P-V\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Braytonts.png}\\[1pt]
+      \tiny T-s
+    \column{0.32\textwidth}\centering
+      \textcolor{bleuMarine}{\textbf{Ericsson}}\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Ericssonpv.png}\\[1pt]
+      \tiny P-V\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Ericssonts.png}\\[1pt]
+      \tiny T-s
+    \column{0.32\textwidth}\centering
+      \textcolor{vertCycle}{\textbf{Stirling}}\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Stirlingpv.png}\\[1pt]
+      \tiny P-V\\[3pt]
+      \includegraphics[height=3.2cm,keepaspectratio]{fig/Stirlingts.png}\\[1pt]
+      \tiny T-s
+  \end{columns}
+
+  \vspace{0.25em}
+
+
+\end{frame}
+
+% ============================================================
+\section{Simulation num\'erique}
+% ============================================================
+
+%% ── Gaz parfait face au gaz réel : hypothèse + graphe ──────
+\begin{frame}{Gaz parfait face au gaz r\'eel : hypoth\`ese}
+  \framesubtitle{$C_p$ de l'air n'est pas constant avec la temp\'erature}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Hypoth\`ese gaz parfait}
+        \small
+        Le mod\`ele gaz parfait suppose :\\[6pt]
+        $C_p = \text{cste}$, $C_v = \text{cste}$, $\gamma = \text{cste}$\\[6pt]
+        Valeurs de r\'ef\'erence :\\[4pt]
+        $C_p \approx 1005$\,J/kg/K \`a 300\,K, 1\,bar\\[4pt]
+        Valables \textbf{uniquement} aux faibles \'ecarts de temp\'erature.
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{$C_p$ de l'air en fonction de $T$}
+        \begin{center}
+          \includegraphics[width=0.85\linewidth]{fig/Cp_vs_T.png}\\[2pt]
+          \tiny $C_p$ (J/kg/K) en fonction de $T$ (K) --- CoolProp, 1\,bar
+        \end{center}
+      \end{block}
+  \end{columns}
+
+  \vspace{0.6em}
+  \begin{alertblock}{Constat (mesures CoolProp)}
+    \normalsize
+    Pour les cycles \`a haute temp\'erature ($\Tmax \approx 1100$\,K),
+    $C_p$ augmente de \textbf{$+13{,}5\,\%$} entre 300\,K
+    et 1100\,K.\\[2pt]
+    Le mod\`ele id\'eal \textbf{sous-estime} $\Qin$
+    et \textbf{surestime} $\eta$.
+  \end{alertblock}
+
+\end{frame}
+
+%% ── Gaz parfait face au gaz réel : mesures quantitatives ────
+\begin{frame}{Gaz parfait face au gaz r\'eel : impact quantitatif}
+  \framesubtitle{\'Ecart mesur\'e sur $C_p$ et cons\'equence sur le rendement simul\'e}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{alertblock}{Variation mesur\'ee de $C_p$ pour l'air}
+        \small
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{lcc}
+          \toprule
+          Condition & $C_p$ (J/kg/K) & \'Ecart \\
+          \midrule
+          300\,K, 1\,bar   & 1\,005 & r\'ef\'erence \\
+          700\,K, 1\,bar   & 1\,075 & $+7\,\%$  \\
+          1100\,K, 1\,bar  & 1\,141 & $+13{,}5\,\%$ \\
+          1100\,K, 20\,bar & 1\,148 & $+14{,}2\,\%$ \\
+          \bottomrule
+        \end{tabular}\\[6pt]
+        \'Ecart r\'esultant sur $\eta$ : jusqu'\`a $\mathbf{-3{,}1}$ points.
+      \end{alertblock}
+
+    \column{0.46\textwidth}
+      \begin{exampleblock}{Conclusion}
+        \small
+        Le mod\`ele gaz parfait \textbf{sous-estime} $\Qin$
+        et \textbf{surestime} $\eta$ pour $\Tmax > 700$\,K.\\[6pt]
+        CoolProp recalcule $h(T,P)$ et $s(T,P)$ avec
+        des \'equations d'\'etat pr\'ecises \`a $< 0{,}1\,\%$
+        (cf.~Annexe~A2).
+      \end{exampleblock}
+
+      \vspace{0.3em}
+      \begin{block}{Remarque : effet de $P$}
+        \small
+        L'effet pression ($+0{,}7\,\%$ de 1 \`a 20\,bar
+        \`a 1100\,K) est n\'egligeable devant l'effet
+        de temp\'erature. CoolProp quantifie les deux.
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+%% ── Gaz parfait face à CoolProp : résultats numériques ───────
+\begin{frame}{Gaz parfait face \`a CoolProp \textemdash{} Impact num\'erique (1/2)}
+  \framesubtitle{Comparaison pour le cycle d'Ericsson (\(\Tmax=1100\,\mathrm{K}\))}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{alertblock}{Comparaison quantitative}
+        \small
+        \renewcommand{\arraystretch}{1.15}
+        \begin{tabular}{lcc}
+          \toprule
+          Grandeur & Gaz parfait & CoolProp \\
+          \midrule
+          $\Qin$ (kJ/kg)  & 232 & 252 \\
+          $\Wnet$ (kJ/kg) & 169 & 175 \\
+          $\eta$ (\%)     & 72,7 & \textbf{69,6} \\
+          \bottomrule
+        \end{tabular}\\[4pt]
+        \textcolor{rougeCycle}{\textbf{\'Ecart sur $\eta$ : $-3{,}1$ points}}\\[2pt]
+        \small Cause : $C_p$ r\'eel $>$ $C_p$ gaz parfait
+        $\Rightarrow$ \'energie de chauffage sous-estim\'ee.
+      \end{alertblock}
+
+    \column{0.48\textwidth}
+      \begin{block}{Courbes $\eta$ en fonction de $\Tmax$}
+        \begin{center}
+          \includegraphics[width=0.9\linewidth]{fig/gp_vs_coolpropTmax.png}\\[-2pt]
+          \tiny $\eta$ (\%) en fonction de $\Tmax$ :
+          gaz parfait (tiret\'e) et CoolProp (trait plein)
+        \end{center}
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}{Gaz parfait face \`a CoolProp \textemdash{} Impact num\'erique (2/2)}
+  \framesubtitle{Bilan sur l'utilisation du mod\`ele}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{M\^eme analyse pour le cycle de Brayton}
+        \normalsize
+        Gaz Parfait~$=$~48{,}2\,\%\\[4pt]
+        CoolProp~$=$~$\mathbf{50{,}9\,\%}$\\[6pt]
+        \'Ecart \textit{inverse} : $C_p(T)$ devient plus grand \`a haute temp\'erature,
+        ce qui d\'efavorise la compression et favorise
+        la d\'etente, entra\^inant un \'equilibre diff\'erent.
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Utilisation de CoolProp}
+        \normalsize
+        \texttt{h = PropsSI("H","T",T,"P",P,"Air")}\\[4pt]
+        \texttt{s = PropsSI("S","T",T,"P",P,"Air")}\\[6pt]
+        L'\'ecart justifie le passage \`a une r\'esolution num\'erique car l'approximation s'effondre \`a haute temp\'erature :\\[4pt]
+        \`a 900\,K :~$-1{,}5$~pt \\
+        \`a 1300\,K :~$-4$~pts.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Validation numérique + architecture ─────────────────────
+\begin{frame}{Validation num\'erique du code (1/2)}
+  \framesubtitle{M\'ethodologie et v\'erification}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Double v\'erification syst\'ematique}
+        \normalsize
+        \textbf{M\'eth. 1} --- entropique :\\[2pt]
+        \( \Qin = \Tmax\cdot(s_4-s_3) \)\\[8pt]
+        \textbf{M\'eth. 2} --- int\'egration num\'erique $\int P\,dv$\\[2pt]
+        Trajectoire d\'ecoup\'ee en 200 points (m\'ethode des trap\`ezes) :
+        \[
+          W = \sum_i P_i\,\Delta v_i
+        \]
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{alertblock}{Crit\`ere d'acceptation num\'erique}
+        \normalsize
+        Pour valider la consistance de notre int\'egration pas-\`a-pas avec le bilan macroscopique :
+        \[
+          \frac{|W_{\int P\,dv} - W_{T\Delta s}|}{|W_{T\Delta s}|}
+          < 1\,\%
+        \]
+        \vspace{1em}
+        + D\'eductions physiques v\'erifi\'ees :\\[4pt]
+        $\eta \in [0,1]$ et $\eta \leq \etaC$
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Validation num\'erique du code (2/2)}
+  \framesubtitle{Architecture logicielle et optimisation}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Architecture logicielle}
+        \normalsize
+        \textbf{Modules de simulation core :}
+        \texttt{Ericsson.py} / \texttt{Brayton.py} /
+        \texttt{Stirling.py}\\[6pt]
+        \textbf{Optimisation Python :}
+        \texttt{@lru\_cache(maxsize=50000)} appliqu\'e sur l'appel thermodynamique.
+        gain $\times\,5$ en temps de calcul\\[6pt]
+        \textbf{Interface de restitution :}
+        \texttt{app.py} (Interface Streamlit interactive) pour faire varier l'\'etude param\'etrique en temps r\'eel et extraire le CSV de trace.
+      \end{block}
+      
+
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Impact sur la complexit\'e}
+        \normalsize
+        Pour acc\'eder \`a la cartographie et tracer une courbe compl\`ete, des boucles massives sont n\'ecessaires :\\[8pt]
+        $50 \times 4 \times 200 = 40\,000$\\[2pt]
+        appels CoolProp unitaires par param\`etre simul\'e.\\[8pt]
+        Le cache L1 applicatif \'evite les r\'e\'evaluations lourdes
+        aux couples $(T,P)$ r\'ecurrents sur le r\'eseau isolign\'e.
+      \end{exampleblock}
+      
+  \end{columns}
+  \begin{block}{}
+    \normalsize\centering
+    Site d\'eploy\'e publiquement : \texttt{tipecoge.streamlit.app}
+  \end{block}
+\end{frame}
+
+% ============================================================
+
+
+\newcommand{\diapobilani}{
+\begin{frame}{Synth\`ese progressive des propri\'et\'es th\'eoriques}
+  \begin{center}\small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{Brayton} & \textbf{Ericsson} & \textbf{Stirling} \\
+    \midrule
+    $\eta$ d\'epend de $\Tmax$ ? & \textcolor{rougeCycle}{Non} & \textcolor{vertCycle}{Oui} & \textcolor{vertCycle}{Oui} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+}
+
+\newcommand{\diapobilanii}{
+\begin{frame}{Synth\`ese progressive des propri\'et\'es th\'eoriques}
+  \begin{center}\small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{Brayton} & \textbf{Ericsson} & \textbf{Stirling} \\
+    \midrule
+    $\eta$ d\'epend de $\Tmax$ ? & \textcolor{rougeCycle}{Non} & \textcolor{vertCycle}{Oui} & \textcolor{vertCycle}{Oui} \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+}
+
+\newcommand{\diapobilaniii}{
+\begin{frame}{Synth\`ese progressive des propri\'et\'es th\'eoriques}
+  \begin{center}\small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{Brayton} & \textbf{Ericsson} & \textbf{Stirling} \\
+    \midrule
+    $\eta$ d\'epend de $\Tmax$ ? & \textcolor{rougeCycle}{Non} & \textcolor{vertCycle}{Oui} & \textcolor{vertCycle}{Oui} \\
+    $\eta$ d\'epend de $P_{\max}$ ? & Oui (via $\alpha_p$) & \textcolor{vertCycle}{Non} & Non \\
+    $\Wnet$ d\'epend de $P_{\max}$ ? & Oui (optimum $\alpha_p^*$) & Oui ($\ln \alpha_p$) & Non \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+\end{frame}
+}
+
+\newcommand{\diapobilaniv}{
+\begin{frame}{Synth\`ese progressive des propri\'et\'es th\'eoriques}
+  \begin{center}\small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{Brayton} & \textbf{Ericsson} & \textbf{Stirling} \\
+    \midrule
+    $\eta$ d\'epend de $\Tmax$ ? & \textcolor{rougeCycle}{Non} & \textcolor{vertCycle}{Oui} & \textcolor{vertCycle}{Oui} \\
+    $\eta$ d\'epend de $P_{\max}$ ? & Oui (via $\alpha_p$) & \textcolor{vertCycle}{Non} & Non \\
+    $\Wnet$ d\'epend de $P_{\max}$ ? & Oui (optimum $\alpha_p^*$) & Oui ($\ln \alpha_p$) & Non \\
+    R\'eg\'en\'eration n\'ecessaire & Non & Isobare & Isochore \\
+    $\eta_{\text{th\'eorique}}$ & $< \etaC$ & $= \etaC$ & $= \etaC$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.3em}
+  \begin{exampleblock}{}
+    \small
+    Ericsson et Stirling atteignent la borne de Carnot
+    gr\^ace \`a la r\'eg\'en\'eration id\'eale ($\varepsilon = 1$).\\[3pt]
+    Pour Brayton, l'absence de r\'eg\'en\'erateur impose
+    $\eta < \etaC$ quel que soit $\alpha_p$ : le rendement est
+    pilot\'e uniquement par le rapport de compression.
+  \end{exampleblock}
+\end{frame}
+}
+
+\section{R\'esultats param\'etriques}
+% ============================================================
+
+%% ── Influence Tmax ──────────────────────────────────────────
+\begin{frame}{\texorpdfstring{Influence de $\Tmax$ sur le rendement}{Influence de Tmax sur le rendement}}
+  \framesubtitle{$\Tmin = 300$\,K fix\'e, $\rp = 10$}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.58\textwidth}
+      \begin{center}
+        \includegraphics[width=\linewidth]{fig/eta_Tmax.pdf}\\[-2pt]
+        \tiny $\eta$ (\%) en fonction de $\Tmax$ (K), plage 600--1300\,K
+      \end{center}
+
+    \column{0.38\textwidth}
+      \begin{block}{Ericsson \& Stirling}
+        $\eta = 1 - 300/\Tmax$ : croissance monotone.
+        \small
+        \begin{tabular}{lc}
+          900\,K  & 66,7\,\% \\
+          1100\,K & 72,7\,\% \\
+          1300\,K & 76,9\,\% \\
+        \end{tabular}
+      \end{block}
+
+      \begin{alertblock}{Brayton}
+        \small $\eta$ \textbf{constant} avec $\Tmax$
+        (pour $\rp$ fix\'e)
+      \end{alertblock}
+
+      \begin{exampleblock}{Levier principal}
+        \small
+        Maximiser $\Tmax$ est le levier
+        principal sur $\eta$.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+%% ── Wnet et Qin en fonction de Tmax ────────────────────────
+\begin{frame}[shrink=3]{\texorpdfstring{Influence de $\Tmax$ sur $\Wnet$ et $\Qin$}{Influence de Tmax sur Wnet et Qin}}
+  \framesubtitle{$\Tmin = 300$\,K fix\'e, $\rp = 10$}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+      \begin{block}{$\Wnet(\Tmax)$}
+        \begin{center}
+          \includegraphics[width=\linewidth,height=3.0cm,keepaspectratio]{fig/Wnet_Tmax.pdf}
+        \end{center}
+      \end{block}
+    \column{0.49\textwidth}
+      \begin{block}{$\Qin(\Tmax)$}
+        \begin{center}
+          \includegraphics[width=\linewidth,height=3.0cm,keepaspectratio]{fig/Qin_Tmax.pdf}
+        \end{center}
+      \end{block}
+  \end{columns}
+
+  \begin{exampleblock}{Lecture compar\'ee}
+    \small
+    Ericsson \& Stirling : $\Wnet$ et $\Qin$ croissent ensemble --- $\eta$ suit Carnot.\\
+    Brayton : $\Wnet$ croît mais $\eta$ reste constant ($\rp$ fix\'e), $\Qin$ croît proportionnellement.
+  \end{exampleblock}
+
+\end{frame}
+\diapobilanii
+
+
+%% ── Influence Pmax et rp ────────────────────────────────────
+\begin{frame}{\texorpdfstring{Influence de $\Pmax$ et $\alpha_p$}{Influence de Pmax et alpha\_p}}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+      \begin{block}{Travail net selon $\Pmax$}
+        \begin{center}
+          \includegraphics[width=\linewidth,height=3.8cm,keepaspectratio]{fig/Wnet_Pmax.pdf}
+        \end{center}
+      \end{block}
+    \column{0.49\textwidth}
+      \begin{block}{Rendement selon $\alpha_p$ (Brayton)}
+        \begin{center}
+          \includegraphics[width=\linewidth,height=3.8cm,keepaspectratio]{fig/eta_rp.pdf}
+        \end{center}
+      \end{block}
+  \end{columns}
+
+  \begin{exampleblock}{M\'ecanismes de pression}
+    \small
+    Le rendement de Brayton est d\'etermin\'e par $\alpha_p$.\\
+    Le travail net des trois cycles d\'epend fortement de la densit\'e du gaz, donc de $\Pmax$.
+  \end{exampleblock}
+\end{frame}
+\diapobilaniii
+
+
+%% ── Influence Tmin ───────────────────────────────────────────
+\begin{frame}{\texorpdfstring{Influence de $\Tmin$ \textemdash{} \'Etude quantitative (1/2)}{Influence de Tmin - Etude quantitative (1/2)}}
+  \framesubtitle{Impact thermique sur l'enveloppe de conception}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{\normalsize $\eta$ en fonction de $\Tmin$}
+        \begin{center}
+          \includegraphics[width=0.9\linewidth]{fig/eta_Tmin.pdf}\\[-2pt]
+          \small Brayton, Ericsson, Stirling, Carnot
+        \end{center}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{block}{\normalsize $\Qin$ en fonction de $\Tmin$}
+        \begin{center}
+          \includegraphics[width=0.9\linewidth]{fig/Qin_Tmin.pdf}\\[-2pt]
+          \small $\Qin$ (kJ/kg) : Brayton, Ericsson, Stirling
+        \end{center}
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}{\texorpdfstring{Influence de $\Tmin$ \textemdash{} Bilan (2/2)}{Influence de Tmin - Bilan (2/2)}}
+  \framesubtitle{Le compromis de cog\'en\'eration}
+
+  \begin{alertblock}{Dilemme de la cog\'en\'eration}
+    \normalsize
+    \textbf{$\Tmin$ bas} (ex: 300\,K) :\\[2pt]
+    $\eta_{\text{\'elec}}$ maximal, mais $Q_\text{utile}$ est \'evacu\'e \`a tr\`es basse temp\'erature, ce qui n'est pas expolitable ni pour le r\'eseau de chaleur ni pour un process industriel.\\[8pt]
+    \textbf{$\Tmin$ \'elev\'e} (ex: 380\,K - 450\,K) :\\[2pt]
+    $\eta_{\text{\'elec}}$ r\'eduit drastiquement, mais $Q_\text{utile}$ devient hautement \textbf{valorisable}.
+  \end{alertblock}
+
+  \begin{exampleblock}{Rendement global du syst\`eme}
+    \[
+      \eta_g = \frac{\Wnet + Q_{\text{utile}}}{Q_{\text{source}}}
+    \]
+    \small
+    Au bilant net r\'eel, l'efficacit\'e thermique $\eta_g$ d'utilisation du combustible reste \textbf{maximale} m\^eme si l'efficacit\'e \'electrique baisse.\\[4pt]
+    $\Rightarrow$ Le choix de $\Tmin$ doit \^etre dict\'e par les co\^uts d'\'energie respectifs et la nature des besoins thermiques et non en optimisant aveugl\'ement la machine thermique isol\'ee.
+  \end{exampleblock}
+
+\end{frame}
+\diapobilaniv
+
+
+%% ── Comparaison des 3 cycles : propriétés ──────────────────
+
+
+%% ── Comparaison des 3 cycles : résultats numériques ─────────
+\begin{frame}{Les trois cycles : r\'esultats CoolProp}
+  \framesubtitle{Conditions identiques :
+    $\Tmin=300$\,K, $\Tmax=1100$\,K, $r_p=10$, $r_v=3$ (Stirling)}
+
+  \begin{center}\small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{lccc}
+    \toprule
+    & \textbf{Brayton} & \textbf{Ericsson} & \textbf{Stirling} \\
+    \midrule
+    $\eta$ simul\'e avec CoolProp (\%)
+      & $\approx 50{,}9$ & $\approx 69{,}6$ & $\approx 69{,}6$ \\
+    $\Wnet$ (kJ/kg)
+      & $\approx 283$ & $\approx 349$ & $\approx 231$ \\
+    $\Qin$ (kJ/kg)
+      & $\approx 556$ & $\approx 502$ & $\approx 332$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \vspace{0.6em}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{alertblock}{Brayton versus Ericsson}
+        \small
+        \'Ecart de rendement : $\approx 19$ points.\\[3pt]
+        Cause unique : absence de r\'eg\'en\'erateur
+        dans Brayton $\Rightarrow$ $\Qin$ bien plus \'elev\'e
+        (chauffage isobare depuis $T_2 \ll \Tmax$).
+      \end{alertblock}
+
+    \column{0.46\textwidth}
+      \begin{exampleblock}{Stirling}
+        \small
+        $\eta$ identique \`a Ericsson,
+        mais $\Wnet$ plus faible :\\[2pt]
+        le rapport de volume $r_v$ limite
+        le travail net, alors que
+        Ericsson peut augmenter $r_p$
+        librement.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+% ============================================================
+\section{Conclusion \& Perspectives}
+% ============================================================
+
+%% ── Synthèse ────────────────────────────────────────────────
+\begin{frame}{Synth\`ese et r\'eponse \`a la probl\'ematique}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{exampleblock}{Ericsson \& Stirling}
+        \[
+          \eta = 1 - \frac{\Tmin}{\Tmax}
+        \]
+        \small
+        Seul $\Tmax$ pilote $\eta$.\\
+        $\Pmax$ pilote $\Wnet$ sans affecter $\eta$.\\
+        $\Rightarrow$ S\'eparation puissance/rendement.
+      \end{exampleblock}
+
+      \vspace{0.55em}
+      \begin{alertblock}{Brayton}
+        \[
+          \eta = 1 - \rp^{\,(1-\gamma)/\gamma}
+        \]
+        \small
+        Seul $\rp$ pilote $\eta$.\\
+        $T_3$ (sortie chambre) n'influe pas sur $\eta$\\
+        (se simplifie dans $\frac{\Wnet}{\Qin}$).\\
+        $\Wnet$ passe par un maximum en $\rp^*$.
+      \end{alertblock}
+
+    \column{0.46\textwidth}
+      \begin{block}{Tableau de synth\`ese}
+        \small
+        \renewcommand{\arraystretch}{1.1}
+        \begin{tabular}{lccc}
+          \toprule
+          & B & E & S \\
+          \midrule
+          $\eta=\etaC$ & \textcolor{rougeCycle}{\texttimes}
+                       & \textcolor{vertCycle}{\checkmark}
+                       & \textcolor{vertCycle}{\checkmark} \\
+          $\Wnet$ via $P$
+                       & opt.
+                       & \textcolor{vertCycle}{\checkmark}
+                       & \textcolor{rougeCycle}{\texttimes} \\
+          Grandes MW   & \textcolor{vertCycle}{\checkmark}
+                       & \textcolor{vertCycle}{\checkmark}
+                       & \textcolor{rougeCycle}{\texttimes} \\
+          \bottomrule
+        \end{tabular}
+      \end{block}
+
+      \vspace{0.55em}
+      \begin{block}{Bilan num\'erique}
+        \small
+        Mod\'elisation CoolProp (gaz r\'eel),
+        validation crois\'ee $T\Delta s$ / $\int P\,dv$
+        (\'ecart $< 1\,\%$),
+        \'etude param\'etrique compl\`ete.
+      \end{block}
+  \end{columns}
+
+\end{frame}
+
+\begin{frame}{Validation exp\'erimentale \textemdash{} Montage}
+  \framesubtitle{Moteur Jeulin 204081 (3B Scientific) --- ExAO Foxy}
+  
+  \begin{center}
+    % Espaces dédiés aux 3 photos du montage
+    \includegraphics[height=2.9cm,keepaspectratio]{fig/EXAO.jpg}
+    \hspace{0.2em}
+    % placeholders for the missing two pictures
+    \includegraphics[height=2.9cm,keepaspectratio]{fig/EXAO1.jpg} \\[1em]
+    \includegraphics[height=2.9cm,keepaspectratio]{fig/EXAO2.jpg}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Validation exp\'erimentale \textemdash{} Caract\'eristiques}
+  \framesubtitle{D\'etails du dispositif exp\'erimental}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Dispositif exp\'erimental}
+        \normalsize
+        \begin{itemize}\itemsep4pt
+          \item Moteur Stirling $\alpha$ transparent\\
+                (cylindres en verre thermor\'esistant)
+          \item Source chaude : r\'echaud \`a alcool
+          \item Capteur PV Stirling Jeulin branch\'e sur interface ExAO Foxy
+          \item Acquisition num\'erique en temps r\'eel de la pression $P(t)$ et du volume $V(t)$
+          \item Thermocouple de type~K pour $T_{\text{chaud}}$ et $T_{\text{froid}}$
+        \end{itemize}
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Param\`etres du moteur}
+        \normalsize
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{@{}ll@{}}
+          \toprule
+          Param\`etre & Valeur \\
+          \midrule
+          $V_{\min}$ / $V_{\max}$ & 32 / 44\,cm$^3$ \\
+          $\rv = V_{\max}/V_{\min}$ & \textbf{1{,}375} \\
+          Puissance nominale & 1{,}5\,W \\
+          Vitesse sans charge & $\approx$\,1\,000\,tr/min \\
+          \bottomrule
+        \end{tabular}
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+%% ── Diagramme P-V mesuré ─────────────────────────────────────
+\begin{frame}{Diagramme P-V exp\'erimental du cycle de Stirling (1/2)}
+  \framesubtitle{Mise en \'evidence par acquisition ExAO --- Visuel brut}
+  
+  \begin{center}
+    \includegraphics[height=5.8cm,keepaspectratio]{fig/stirling_PV.pdf}\\[4pt]
+    \small Diagramme de Clapeyron mesur\'e ($P$ en mbar, $V$ en cm$^3$).\\
+    \footnotesize $T_{\text{d\'emarrage}} = 124\,\text{\textdegree C}$, $T_{\text{max}} = 228\,\text{\textdegree C}$
+  \end{center}
+\end{frame}
+
+\begin{frame}{Diagramme P-V exp\'erimental du cycle de Stirling (2/2)}
+  \framesubtitle{Analyse des r\'esultats du graphe}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Lecture du diagramme}
+        \normalsize
+        \textbf{Branche haute} (courbe rouge) :\\[2pt]
+        Phase de d\'etente s'approchant de l'isotherme \`a chaude $T_{\max} = 228\,$\textdegree C.\\[8pt]
+        \textbf{Branche basse} (courbe bleue) :\\[2pt]
+        Phase de compression \`a $T_{\min}$.
+      \end{block}
+
+      \vspace{0.5em}
+      \begin{exampleblock}{Int\'egration de l'aire}
+        \normalsize
+        L'aire alg\'ebrique interne au cycle correspond au travail net :
+        \[
+          \Wnet = \oint P\,dV
+        \]
+      \end{exampleblock}
+
+    \column{0.48\textwidth}
+      \begin{alertblock}{Valeurs mesur\'ees}
+        \normalsize
+        \renewcommand{\arraystretch}{1.2}
+        \begin{tabular}{ll}
+          $\rv^{\text{exp}}$ & $1{,}368$ \\
+          $\Delta P_{\text{max}}$ & $\approx 246\,$mbar \\
+          $\Wnet$ & $\mathbf{323\,\text{mJ}}$ /cycle
+        \end{tabular}
+      \end{alertblock}
+
+      \vspace{0.5em}
+      \begin{block}{Plafond th\'eorique limitant}
+        \normalsize
+        En mod\`ele de Carnot, avec les extr\^emes de la machine~:
+        \[
+        \etaC = 1 - \dfrac{397\,\mathrm{K}}{501\,\mathrm{K}} \approx \mathbf{20{,}8\,\%}
+        \]
+      \end{block}
+  \end{columns}
+\end{frame}
+
+%% ── Comparaison modèle / expérience ─────────────────────────
+\begin{frame}{Confrontation mod\`ele -- mesure (1/2)}
+  \framesubtitle{Identification de l'efficacit\'e du r\'eg\'en\'erateur $\varepsilon$}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{block}{Mod\`ele num\'erique actualis\'e}
+        \normalsize
+        Avec $T_{\min} = 397$\,K, $T_{\max} = 501$\,K et le rapport mesur\'e $\rv = 1{,}368$ :\\[4pt]
+        On \'evalue la chaleur effectivement re\c{c}ue par le fluide en tenant compte de l'imperfection $\varepsilon$ du r\'eg\'en\'erateur :
+        \[
+          Q_{\text{in,eff}} = Q_{34} + (1-\varepsilon)\,Q_{\text{23,r\'eg}}
+        \]
+        \[
+          \Rightarrow \eta_{\text{mod}} = \frac{\Wnet}{Q_{\text{in,eff}}} < \etaC
+        \]
+      \end{block}
+
+    \column{0.48\textwidth}
+      \begin{exampleblock}{Bilan num\'erique vs de Carnot}
+        \normalsize
+        \renewcommand{\arraystretch}{1.3}
+        \begin{tabular}{@{}lc@{}}
+          \toprule
+          Grandeur limitante & Valeur \\
+          \midrule
+          $\rv^{\text{exp}}$ exp\'erimental & $1{,}368$ \\
+          $\Wnet$ r\'eel exp (ExAO) & $323\,$mJ/ct \\
+          \midrule
+          $\etaC$ plafond de Carnot & $20{,}8\,\%$ \\
+          $\eta_{\text{mod}}$ \textbf{($\varepsilon = 0{,}85$)} & $\mathbf{\approx\,12\,\%}$ \\
+          \bottomrule
+        \end{tabular}
+      \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Confrontation mod\`ele -- mesure (2/2)}
+  \framesubtitle{Synth\`ese et Origine des d\'egradations de rendement}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+      \begin{center}
+        \includegraphics[height=4.5cm,keepaspectratio]{fig/stirling_eta_comp.pdf}\\[2pt]
+        \small $\eta$ en fonction de $T_{\max}$ \textemdash{} mod\`ele vs Carnot
+      \end{center}
+
+    \column{0.48\textwidth}
+      \begin{alertblock}{Conclusion exp\'erimentale}
+        \normalsize
+        \textbf{Limitation architecturale :} le mod\`ele r\'ev\`ele qu'un si faible $\rv \approx 1{,}37$ bridera imm\'ediatement les capacit\'es du moteur (puisque $\Wnet \propto \ln \rv$).\\[8pt]
+        \textbf{Chute de rendement :}\\
+        L'\'ecart immense entre $\etaC$ (20\,\%) et $\eta_{\text{mod}}$ (12\,\%) s'explique analytiquement et int\`egre naturellement les irr\'eversibilit\'es thermiques : la \textbf{r\'eg\'en\'eration non id\'eale ($\varepsilon \approx 0{,}85$)} et une \'echange thermodynamique continu.\\
+      \end{alertblock}
+  \end{columns}
+\end{frame}
+
+
+
+% ============================================================
+%  ANNEXES
+% ============================================================
+\appendix
+\section{Annexes}
+
+
+\setbeamertemplate{footline}{%
+  \leavevmode\hbox{%
+    \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.4ex,dp=1.1ex,leftskip=5pt]
+        {author in head/foot}\textbf{Prouteau J\'er\'emie}
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.40\paperwidth,ht=2.4ex,dp=1.1ex,center]
+        {title in head/foot}Annexes
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.27\paperwidth,ht=2.4ex,dp=1.1ex,rightskip=5pt]
+        {date in head/foot}\hfill 2026
+    \end{beamercolorbox}%
+  }\vskip0pt}
+
+% ── A1 : Relation de Gibbs ───────────────────────────────────
+\begin{frame}{A1 --- La relation de Gibbs (1/2)}
+  \framesubtitle{Outil fondamental pour toutes les d\'emonstrations : Origine}
+
+  \begin{block}{Origine}
+    \normalsize
+    Combinaison du 1\textsuperscript{er} et du 2\textsuperscript{e} principe
+    pour une transformation \textbf{r\'eversible} :
+    \[
+      \delta Q_{\text{r\'ev}} = T\,ds
+      \quad\text{et}\quad
+      \delta W_{\text{r\'ev}} = -P\,dv
+    \]
+    1\textsuperscript{er} principe : $dU = \delta Q + \delta W = T\,ds - P\,dv$
+
+    Comme $H = U + Pv \Rightarrow dH = dU + P\,dv + v\,dP$ :
+    \[
+      \boxed{T\,ds = dU + P\,dv = dH - v\,dP}
+    \]
+    C'est la \textbf{relation de Gibbs}, valable pour tout \'etat
+    d'\'equilibre d'un corps pur, m\^eme irr\'eversiblement atteint
+    (car $s$, $U$, $H$ sont des fonctions d'\'etat).
+  \end{block}
+\end{frame}
+
+\begin{frame}{A1 --- La relation de Gibbs (2/2)}
+  \framesubtitle{Applications imm\'ediates pour la simulation}
+
+  \begin{exampleblock}{D\'eductions directes thermodynamiques}
+    \normalsize
+    \textbf{Isobare} ($dP=0$) :\\[2pt]
+    $T\,ds = dH = C_p\,dT \;\Rightarrow\; ds = (C_p/T)\,dT$\\[8pt]
+    \textbf{Isochore} ($dv=0$) :\\[2pt]
+    $T\,ds = dU = C_v\,dT \;\Rightarrow\; ds = (C_v/T)\,dT$\\[8pt]
+    \textbf{Isentropique} ($ds=0$) :\\[2pt]
+    $C_p\,dT = v\,dP = (rT/P)\,dP$ (mod\`ele gaz parfait)\\[8pt]
+    \textbf{Isotherme} ($dT=0$, gaz parfait) :\\[2pt]
+    $dU = 0 \Rightarrow \delta Q = \delta W = P\,dv$
+  \end{exampleblock}
+\end{frame}
+
+% ── A2 : Équations HEOS de CoolProp ─────────────────────────
+\begin{frame}{A2 --- \'Equations de Helmholtz (CoolProp)}
+  \framesubtitle{Pourquoi et comment CoolProp d\'epasse le gaz parfait}
+
+  \begin{block}{\'Energie libre de Helmholtz r\'eduite}
+    \small
+    L'\'etat d'un fluide pur est d\'ecrit par l'\'energie de Helmholtz
+    r\'eduite $\alpha$, fonction de deux variables r\'eduites :
+    \[
+      \alpha(\delta, \tau)
+      = \frac{A(T,\rho)}{RT}
+      = \alpha^o(\delta,\tau) + \alpha^r(\delta,\tau)
+    \]
+    \vspace{-6pt}
+    o\`u $\delta = \rho/\rho_c$, $\tau = T_c/T$,
+    $\alpha^o$ = contribution id\'eale (gaz parfait),
+    $\alpha^r$ = termes r\'esiduels (interactions mol\'eculaires).
+  \end{block}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{block}{Propri\'et\'es d\'eriv\'ees}
+        \small
+        \vspace{-2pt}
+        \[
+          \frac{P}{\rho RT}
+          = 1 + \delta\!\left(\frac{\partial\alpha^r}{\partial\delta}\right)_{\!\tau}
+        \]
+        \vspace{-8pt}
+        \[
+          \frac{H}{RT}
+          = 1 + \tau\!\left(\frac{\partial\alpha}{\partial\tau}\right)_{\!\delta}
+            + \delta\!\left(\frac{\partial\alpha^r}{\partial\delta}\right)_{\!\tau}
+        \]
+        \vspace{-8pt}
+        \[
+          \frac{S}{R}
+          = \tau\!\left(\frac{\partial\alpha}{\partial\tau}\right)_{\!\delta}
+            - \alpha
+        \]
+      \end{block}
+
+    \column{0.46\textwidth}
+      \begin{exampleblock}{Pour l'air}
+        \small
+        Les coefficients de $\alpha^r$ sont ajust\'es
+        sur des donn\'ees exp\'erimentales couvrant
+        $60$--$2000$\,K et jusqu'\`a $2000$\,bar.\\[4pt]
+        Pr\'ecision obtenue : $< 0{,}1\,\%$ sur
+        $h$, $s$ et $\rho$ pour les conditions
+        d'int\'er\^et de cette \'etude.\\[4pt]
+        Gaz parfait : $\alpha^r = 0$,
+        tous les termes r\'esiduels disparaissent.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+% ── A3 : Relation isentropique ───────────────────────────────
+\begin{frame}{A3 --- Relation isentropique (Brayton)}
+
+  \textbf{\'Enonc\'e :} Montrer que
+  $T_2/T_1 = \rp^{(\gamma-1)/\gamma}$
+  pour une compression adiabatique r\'eversible.
+
+  \begin{block}{D\'emonstration condens\'ee}
+    \small
+    Relation de Gibbs en isentropique ($ds=0$) avec l'\'equation du gaz parfait ($Pv = rT$) :
+    \[
+      T\,ds = dH - v\,dP = C_p\,dT - \frac{rT}{P}\,dP = 0 
+      \quad\Rightarrow\quad 
+      \frac{dT}{T} = \frac{r}{C_p}\frac{dP}{P}
+    \]
+    \vspace{-4pt}
+    On sait que $r = C_p - C_v$ d'apr\`es la relation de Mayer, donc :
+    \[
+      \frac{r}{C_p} = 1 - \frac{C_v}{C_p} = 1 - \frac{1}{\gamma} = \frac{\gamma-1}{\gamma}
+    \]
+    \vspace{-4pt}
+    En int\'egrant de $1$ \`a $2$ ($\int dx/x = \ln x$) :
+    \[
+      \ln\!\left(\frac{T_2}{T_1}\right) = \frac{\gamma-1}{\gamma}\ln\!\left(\frac{P_2}{P_1}\right)
+      \quad\Rightarrow\quad
+      \boxed{\frac{T_2}{T_1} = \rp^{\,\frac{\gamma-1}{\gamma}}}
+    \]
+  \end{block}
+\end{frame}
+
+% ── A4 : Rendement Brayton ────────────────────────────────────
+\begin{frame}{A4 --- D\'emonstration de $\eta_{\text{Brayton}}$}
+
+  \begin{block}{D\'emonstration compl\`ete}
+    Poser $x = \rp^{(\gamma-1)/\gamma}$ :
+    $T_2 = T_1 x$, $T_4 = T_3/x$.
+    \[
+      \eta = 1 - \frac{T_4 - T_1}{T_3 - T_2}
+           = 1 - \frac{T_3/x - T_1}{T_3 - xT_1}
+    \]
+    Factoriser par $1/x$ au num\'erateur :
+    \[
+      = 1 - \frac{(T_3 - xT_1)/x}{T_3 - xT_1}
+      = 1 - \frac{1}{x}
+    \]
+    \[
+      \boxed{\eta_{\text{Brayton}} = 1 - \rp^{\,(1-\gamma)/\gamma}}
+      \qquad
+    \]
+    \textbf{Propri\'et\'e :} le facteur $(T_3 - xT_1)$ se simplifie
+    exactement --- $\eta$ est ind\'ependant de $T_3$ (temp\'erature
+    en sortie de chambre de combustion).
+  \end{block}
+
+\end{frame}
+
+% ── A5 : rp* Brayton ─────────────────────────────────────────
+\begin{frame}{A5 --- Rapport de pression optimal $\rp^*$ (Brayton)}
+
+  \begin{block}{Maximisation de $\Wnet$}
+    \small
+    En posant $x = \rp^{(\gamma-1)/\gamma}$ et
+    $\tau = \frac{T_3}{T_1}$ (rapport des temp\'eratures source/puits) :
+    \[ \Wnet = C_p T_1\!\left(\tau - \frac{\tau}{x} - x + 1\right) \]
+    
+    Condition n\'ecessaire d'extremum (d\'eriv\'ee premi\`ere nulle) :
+    \[ \frac{d\Wnet}{dx} = C_p T_1\!\left(\frac{\tau}{x^2} - 1\right) = 0 \;\Rightarrow\; x = \sqrt{\tau} \]
+    
+    Condition suffisante (d\'eriv\'ee seconde n\'egative) :
+    $d^2\Wnet/dx^2 = -2C_p T_1\tau/x^3 < 0$, c'est bien un \textbf{maximum}.\\
+    On trouve en isolant $\rp$ :
+    \[ \boxed{\rp^* = \left(\tau\right)^{\!\!\frac{\gamma}{2(\gamma-1)}}} \]
+    Application : $T_3/T_1 = 1100/300 \approx 3{,}67$,
+    $\gamma = 1{,}4$ $\Rightarrow$ $\rp^* \approx 8{,}6$.
+  \end{block}
+\end{frame}
+
+% ── A6 : Variation d'entropie isobare ────────────────────────
+\begin{frame}{A6 --- Entropie isobare (Ericsson)}
+
+  \textbf{\'Enonc\'e :} Calculer $\Delta s_{23}$ sur l'isobare 2$\to$3
+  de $\Tmin$ \`a $\Tmax$ et montrer que $|\Delta s_{23}| = |\Delta s_{41}|$.
+
+  \begin{block}{D\'emonstration}
+    \small
+    Relation de Gibbs + isobare ($dP=0$) :
+    \[
+      T\,ds = dH = C_p\,dT
+      \;\Rightarrow\;
+      ds = \frac{C_p}{T}\,dT
+    \]
+    Int\'egration de $\Tmin$ \`a $\Tmax$ :
+    \[
+      \Delta s_{23} = C_p\ln\!\frac{\Tmax}{\Tmin} > 0
+    \]
+    Pour l'isobare 4$\to$1 (de $\Tmax$ \`a $\Tmin$) :
+    \[
+      \Delta s_{41} = C_p\ln\!\frac{\Tmin}{\Tmax}
+      = -\Delta s_{23}
+    \]
+    \vspace{-6pt}
+    \[
+      \Rightarrow |Q_{23}| = C_p(\Tmax-\Tmin) = |Q_{41}|
+      \qquad
+    \]
+    \vspace{-4pt}
+    \small\textit{Avec $C_p(T)$ variable (CoolProp) : m\^eme
+    conclusion, les deux isobares couvrant $[\Tmin,\Tmax]$.}
+  \end{block}
+
+\end{frame}
+
+% ── A7 : Travail net Ericsson ─────────────────────────────────
+\begin{frame}{A7 --- Travail net Ericsson}
+
+  \begin{block}{D\'emonstration}
+    \textbf{D\'etente 3$\to$4} \`a $\Tmax$, de $\Pmax$ \`a $\Pmin$
+    (gaz parfait : $Pv = r\Tmax$) :
+    \[
+      W_{34} = \int_{v_3}^{v_4} P\,dv
+             = r\Tmax\ln\!\frac{v_4}{v_3}
+             = r\Tmax\ln\!\frac{P_3}{P_4}
+             = r\Tmax\ln\rp
+    \]
+    \textbf{Compression 1$\to$2} \`a $\Tmin$, de $\Pmin$ \`a $\Pmax$ :
+    \[
+      W_{12} = r\Tmin\ln\!\frac{v_2}{v_1}
+             = r\Tmin\ln\!\frac{\Pmin}{\Pmax}
+             = -r\Tmin\ln\rp
+    \]
+    Les isobares 2$\to$3 et 4$\to$1 sont internes (r\'eg\'en\'eration) :
+    $W_{23}$ et $W_{41}$ se compensent globalement.
+    \[
+      \boxed{\Wnet = r(\Tmax-\Tmin)\ln\rp}
+      \qquad
+    \]
+  \end{block}
+
+\end{frame}
+
+% ── A8 : Démonstration η_Ericsson = η_Carnot (complète) ──────
+\begin{frame}{A8 --- $\eta_{\text{Ericsson}} = \etaC$}
+
+  \begin{block}{\'Etape 1 --- R\'eg\'en\'eration exacte \textit{(cf. A6)}}
+    \small
+    $\Delta s_{23} = -\Delta s_{41}$
+    $\Rightarrow$ $|Q_{23}| = |Q_{41}|$ :
+    avec $\varepsilon = 1$, les isobares ne font
+    \textbf{aucun \'echange ext\'erieur}.
+  \end{block}
+
+  \begin{block}{\'Etape 2 --- Bilan entropique du cycle}
+    \small
+    Seuls \'echanges ext\'erieurs :
+    $\Qin = \Tmax(s_4-s_3)$, $\Qout = \Tmin(s_1-s_2)$.
+
+    $\oint ds = 0$ et \'etape 1 $\Rightarrow$
+    $(s_3-s_2) = -(s_1-s_4)$, donc :
+    \[
+      (s_2-s_1) + (s_4-s_3) = 0
+      \;\Rightarrow\;
+      |s_4-s_3| = |s_2-s_1| \triangleq |\Delta s|
+    \]
+  \end{block}
+
+  \begin{block}{\'Etape 3 --- Rendement}
+    \[
+      \boxed{\eta_{\text{Ericsson}}
+             = 1 - \frac{\Qout}{\Qin}
+             = 1 - \frac{\Tmin\,|\Delta s|}{\Tmax\,|\Delta s|}
+             = 1 - \frac{\Tmin}{\Tmax}
+             = \etaC}
+      \quad
+    \]
+  \end{block}
+
+\end{frame}
+
+% ── A9 : Démonstration η_Stirling = η_Carnot ────────────────
+\begin{frame}{A9 --- D\'emonstration : $\eta_{\text{Stirling}} = \etaC$}
+
+  \begin{block}{\'Etape 1 --- R\'eg\'en\'eration isochore}
+    \small
+    Sur un isochore ($dv = 0$, $\delta W = 0$) : $\delta Q = C_v\,dT$.
+    \textbf{2$\to$3} : $Q_{23} = C_v(\Tmax-\Tmin) > 0$\quad
+    \textbf{4$\to$1} : $|Q_{41}| = C_v(\Tmax-\Tmin) = Q_{23}$
+    Avec $\varepsilon = 1$ : aucun \'echange ext\'erieur.
+  \end{block}
+
+  \begin{block}{\'Etape 2 --- Variations d'entropie des isochores}
+    \[
+      \Delta s_{23} = C_v\ln\!\frac{\Tmax}{\Tmin}, \quad
+      \Delta s_{41} = C_v\ln\!\frac{\Tmin}{\Tmax} = -\Delta s_{23}
+    \]
+    M\^eme bilan entropique qu'Ericsson :
+    $|s_4-s_3| = |s_2-s_1| \triangleq |\Delta s|$
+  \end{block}
+
+  \begin{block}{\'Etape 3 --- Rendement}
+    Seuls \'echanges ext\'erieurs : isothermes.
+    \[
+      \boxed{\eta_{\text{Stirling}}
+             = 1 - \frac{\Tmin\,|\Delta s|}{\Tmax\,|\Delta s|}
+             = 1 - \frac{\Tmin}{\Tmax}
+             = \etaC}
+      \quad
+    \]
+  \end{block}
+
+\end{frame}
+
+% ── A10 : Régénérateur imparfait ─────────────────────────────
+\begin{frame}{A10 --- R\'eg\'en\'erateur imparfait ($\varepsilon < 1$)}
+
+  \begin{block}{Mod\`ele}
+    \small
+    $\varepsilon = Q_{\text{transmis}}/Q_{\text{id\'eal}} \in [0,1]$.
+    La fraction $(1-\varepsilon)$ non transmise est fournie
+    par la source \textbf{externe} :
+    \[
+      Q_{\text{in,eff}}
+      = Q_{34} + (1-\varepsilon)\,C_p(\Tmax-\Tmin)
+    \]
+  \end{block}
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+      \begin{alertblock}{Rendement effectif}
+        \[
+          \eta_\varepsilon
+          = \frac{r(\Tmax-\Tmin)\ln\rp}
+                 {Q_{34} + (1-\varepsilon)C_p\Delta T}
+          < \etaC
+        \]
+        \small
+        $\varepsilon = 1$ : $\eta = \etaC$\\
+        $\varepsilon = 0{,}85$ : perte $\approx 5$--10\,pts\\
+        $\varepsilon = 0$ : $\eta \ll \etaC$
+      \end{alertblock}
+
+    \column{0.46\textwidth}
+      \begin{exampleblock}{Interpr\'etation}
+        \small
+        Le r\'eg\'en\'erateur r\'eduit $\Qin$ sans
+        changer $\Wnet$.\\[3pt]
+        Sans lui (Brayton) :
+        $Q_{\text{in}} = Q_{34} + Q_{23}$,
+        d'o\`u l'\'ecart de $\approx 19$\,pts avec
+        Ericsson \`a conditions identiques.\\[3pt]
+        Param\`etre critique : la mesure de $\varepsilon$
+        est l'objectif principal de la partie exp\'erimentale.
+      \end{exampleblock}
+  \end{columns}
+
+\end{frame}
+
+% ── A11 : Exergie ────────────────────────────────────────────
+\begin{frame}{A11 --- Exergie et cog\'en\'eration (1/2)}
+  \framesubtitle{D\'efinition formelle thermodynamique}
+
+  \begin{block}{D\'efinition}
+    \normalsize
+    L'exergie d'une chaleur $Q$ disponible \`a $T$
+    dans un environnement \`a $T_0$ est le travail util
+    \textbf{maximal} extractible, en imaginant une machine de Carnot r\'eversible plac\'ee entre $T$ et $T_0$ :
+    \[
+      E_x = Q\!\left(1 - \frac{T_0}{T}\right)
+    \]
+  \end{block}
+
+  \vspace{1em}
+  \begin{exampleblock}{Exemples concrets (ambiante $T_0 = 293$\,K)}
+    \normalsize
+    Vapeur haute enthalpie $200^\circ\mathrm{C}$ : $E_x \approx 38\,\%\cdot Q$\\
+    Eau de chauffage $70^\circ\mathrm{C}$ : $E_x \approx 15\,\%\cdot Q$\\
+    Rejet condensateur $47^\circ\mathrm{C}$ : $E_x \approx 8\,\%\cdot Q$
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}{A11 --- Exergie et cog\'en\'eration (2/2)}
+  \framesubtitle{Outil d'\'evaluation \`a la faveur de la cog\'en\'eration}
+  
+  \begin{block}{Destruction d'exergie au condenseur pur}
+    \normalsize
+    Rejeter brutalement $\Qout$ \`a $T_0$ cr\'e\'e irr\'em\'ediablement de l'entropie :
+    \[
+      \dot S_\text{irr} = \Qout\!\left(\frac{1}{T_0} - \frac{1}{T_\text{cond}}\right) \geq 0
+    \]
+  \end{block}
+
+  \vspace{0.5em}
+  \begin{alertblock}{Motivation thermo-conceptuelle pour la cog\'en\'eration}
+    \normalsize
+    Dans une centrale classique,
+    $\Qout$ est rejet\'e \`a $T_\text{cond} \approx T_0$ :
+    son exergie r\'esiduelle est quasi nulle ($\approx 8\,\%$)
+    et \textbf{d\'etruite irr\'eversiblement} par transfert thermique hors l'\'equilibre vers le milieu ambiant.\\[6pt]
+    En cog\'en\'eration certifi\'ee, $\Qout$ est valoris\'e r\'efl\'echit
+    \underline{avant} d'atteindre le point mort et limitant $T_0$ :
+    on r\'ecup\`ere d'abord l'essentiel du co\^ut de pompage sous forme d'exergie \textit{r\'eutilisable}.\\[6pt]
+    C'est la preuve fondamentale, au sens du 2\textsuperscript{e} principe,
+    en faveur d'une telle technologie.
+  \end{alertblock}
+\end{frame}
+
+% ── A12 : Code Ericsson ───────────────────────────────────────
+\begin{frame}[fragile]{A12 --- Code : Ericsson.py}
+
+  \begin{exampleblock}{}
+  \begin{lstlisting}
+from CoolProp.CoolProp import PropsSI as CP
+from functools import lru_cache
+import numpy as np
+
+fluid = "Air"
+
+@lru_cache(maxsize=50000)
+def CP_cached(out, i1, v1, i2, v2, fl):
+    return CP(out, i1, v1, i2, v2, fl)
+
+def get_s(T, P): return CP_cached("S","T",T,"P",P,fluid)
+def get_h(T, P): return CP_cached("H","T",T,"P",P,fluid)
+
+def cycle_ericsson(T_min=300, T_max=1100, P_min=2e5, P_max=20e5):
+    s1, s2 = get_s(T_min,P_min), get_s(T_min,P_max)
+    s3, s4 = get_s(T_max,P_max), get_s(T_max,P_min)
+
+    Q_in  = T_max*(s4-s3)   # chaleur recue  (isotherme 3->4)
+    Q_out = T_min*(s1-s2)   # chaleur cedee  (isotherme 1->2)
+    W_net = Q_in - Q_out
+    eta   = W_net / Q_in
+
+    # Validation croisee int(P dv) via trapeze sur 200 pts
+    # Critere : |W_pdv - W_net| / |W_net| < 1 %
+    return {"Q_in":Q_in, "Q_out":Q_out, "W_net":W_net, "eta":eta}
+  \end{lstlisting}
+  \end{exampleblock}
+
+\end{frame}
+
+% ── A13 : Code Brayton ────────────────────────────────────────
+\begin{frame}[fragile]{A13 --- Code : Brayton.py}
+
+  \begin{exampleblock}{}
+  \begin{lstlisting}
+def cycle_brayton(T1=300, P1=2e5, pressure_ratio=10, T3=1100):
+    P2 = P1 * pressure_ratio
+
+    # Etat 2 : compression isentropique (s constant = s1)
+    s1 = get_s(T1, P1)
+    T2 = CP("T","P",P2,"S",s1,fluid)  # T tel que s(T,P2)=s1
+
+    # Etat 3 : fin chauffage isobare
+    s3 = get_s(T3, P2)
+
+    # Etat 4 : detente isentropique (s constant = s3)
+    T4 = CP("T","P",P1,"S",s3,fluid)
+
+    h1,h2 = get_h(T1,P1), get_h(T2,P2)
+    h3,h4 = get_h(T3,P2), get_h(T4,P1)
+
+    W_comp = h2-h1          # travail compresseur (recu)
+    W_turb = h3-h4          # travail turbine (fourni)
+    W_net  = W_turb - W_comp
+    Q_in   = h3-h2
+
+    return {"W_net":W_net, "Q_in":Q_in, "eta":W_net/Q_in,
+            "T2":T2, "T4":T4}
+  \end{lstlisting}
+  \end{exampleblock}
+
+\end{frame}
+
+% ── A14 : Code Stirling ───────────────────────────────────────
+\begin{frame}[fragile]{A14 --- Code : Stirling.py}
+
+  \begin{exampleblock}{}
+  \begin{lstlisting}
+def cycle_stirling(T_min=300, T_max=1100, V_min=0.3, V_max=1.0):
+    # Pression via equation d'etat : rho = 1/v
+    def get_P(T,V):
+        return CP_cached("P","T",T,"D",1/V,fluid)
+
+    P1 = get_P(T_min, V_max)  # etat 1 : froid, grand vol.
+    P2 = get_P(T_min, V_min)  # etat 2 : froid, petit vol.
+    P3 = get_P(T_max, V_min)  # etat 3 : chaud, petit vol.
+    P4 = get_P(T_max, V_max)  # etat 4 : chaud, grand vol.
+
+    s1,s2 = get_s(T_min,P1), get_s(T_min,P2)
+    s3,s4 = get_s(T_max,P3), get_s(T_max,P4)
+
+    Q_in  = T_max*(s4-s3)   # isotherme 3->4
+    Q_out = T_min*(s1-s2)   # isotherme 1->2
+
+    # Chaleur isochores (regeneration interne)
+    Q_regen = get_h(T_max,P3) - get_h(T_min,P2)
+
+    W_net = Q_in - Q_out
+    return {"Q_in":Q_in, "Q_out":Q_out, "W_net":W_net,
+            "Q_regen":Q_regen, "eta":W_net/Q_in,
+            "eta_carnot":1-T_min/T_max}
+  \end{lstlisting}
+  \end{exampleblock}
+
+\end{frame}
+
+% ── A15 : Code app.py — Boucle étude paramétrique ───────────
+\begin{frame}[fragile]{A15 --- \texttt{app.py} : boucle param\'etrique}
+  \framesubtitle{Simulation it\'erative avec \texttt{numpy.linspace} et stockage des r\'esultats}
+
+  \begin{exampleblock}{Extrait --- \'etude param\'etrique (cycle d'Ericsson)}
+  \begin{lstlisting}
+import numpy as np, pandas as pd
+from src import Ericsson
+
+for param_to_vary in params_to_vary:
+    p_min, p_max = param_ranges[param_to_vary]
+    param_values = np.linspace(p_min, p_max, n_points)  # 5..50 pts
+    results_list = []
+
+    for val in param_values:
+        # Remplace la variable, fixe les autres
+        kwargs = dict(T_min=T_min_fixed, T_max=T_max_fixed,
+                      P_min=P_min_fixed, P_max=P_max_fixed)
+        kwargs[param_to_vary] = val
+
+        if kwargs["T_max"] <= kwargs["T_min"]: continue
+        if kwargs["P_max"] <= kwargs["P_min"]: continue
+
+        res  = Ericsson.cycle_ericsson(**kwargs, show_plot=False)
+        ener = res["energetics"]
+        results_list.append({
+            param_to_vary:    val,
+            "Qin (kJ/kg)":   ener["Q_in"]    / 1000,
+            "Wnet (kJ/kg)":  ener["W_cycle"] / 1000,
+            "Rendement (%)": ener["eta"]      * 100,
+        })
+
+    all_results[param_to_vary] = pd.DataFrame(results_list)
+  \end{lstlisting}
+  \end{exampleblock}
+
+\end{frame}
+
+% ── A16 : Code app.py — Graphique superposé Altair ──────────
+\begin{frame}[fragile]{A16 --- \texttt{app.py} : graphique interactif}
+  \framesubtitle{Superposition des courbes param\'etriques avec Altair (\texttt{create\_overlay\_chart})}
+
+  \begin{exampleblock}{Extrait --- construction du graphique superpos\'e}
+  \begin{lstlisting}
+def create_overlay_chart(all_results, metric_col, y_title):
+    dfs = []
+    for param_name, df in all_results.items():
+        df_copy = df.copy()
+        df_copy["Point"]     = df_copy.index
+        df_copy["Parametre"] = param_name
+        df_copy["Metrique"]  = df_copy[metric_col]
+        dfs.append(df_copy)
+    combined = pd.concat(dfs, ignore_index=True)
+    # Selection au survol
+    nearest = alt.selection_point(nearest=True, on="pointerover",
+                                  fields=["Point"], empty=False)
+
+    line = alt.Chart(combined).mark_line(strokeWidth=2.5).encode(
+        x=alt.X("Point:Q", title="Point de simulation"),
+        y=alt.Y("Metrique:Q", title=y_title),
+        color=alt.Color("Parametre:N", legend=alt.Legend(orient="bottom")),
+    )
+    points = line.mark_circle(size=120).encode(
+        opacity=alt.condition(nearest, alt.value(1), alt.value(0)),
+        tooltip=["Parametre:N", "Valeur affichee:Q", "Metrique:Q"],
+    ).add_params(nearest)
+
+    return alt.layer(line, points).interactive()
+
+# Affichage dans Streamlit (un graphe par metrique)
+st.altair_chart(create_overlay_chart(all_results, "Rendement (%)", "eta (%)"),
+                use_container_width=True)
+  \end{lstlisting}
+  \end{exampleblock}
+
+\end{frame}
+
+% ============================================================
+
+
+\begin{frame}[fragile]{A17 --- \texttt{C_p_vs_T.py} (1/2)}
+  \framesubtitle{Comparatif du Cp de l'air}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+"""
+Trace de Cp(T) pour l'air - CoolProp vs. gaz parfait
+Sauvegarde : fig/Cp_vs_T.pdf et fig/Cp_vs_T.png
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from CoolProp.CoolProp import PropsSI
+
+# __ Parametres ________________________________________________
+T_min, T_max = 300, 1300          # plage de temperatures (K)
+N = 300                            # points de discretisation
+pressures_bar = [1, 5, 10, 20]    # pressions (bar)
+Cp_gp = 1004.5                     # gaz parfait reference ISO (J/kg/K)
+
+# __ Calcul CoolProp ___________________________________________
+T = np.linspace(T_min, T_max, N)
+
+fig, ax = plt.subplots(figsize=(10, 5.5))
+colors = plt.cm.Blues(np.linspace(0.4, 1.0, len(pressures_bar)))
+
+for P_bar, color in zip(pressures_bar, colors):
+    P_Pa = P_bar * 1e5
+    Cp = np.array([PropsSI("Cpmass", "T", Ti, "P", P_Pa, "Air") for Ti in T])
+    ax.plot(T, Cp, color=color, lw=2.0, label=f"CoolProp - {P_bar} bar")
+
+# Reference gaz parfait
+ax.axhline(Cp_gp, color="crimson", lw=1.8, ls="--",
+           label=f"Gaz parfait - $C_p = {Cp_gp:.0f}$ J/(kg/K)")
+
+# __ Annotations temperatures d'interet _______________________
+for T_mark, label in [(700, "700 K"), (1100, "1100 K")]:
+    ax.axvline(T_mark, color="gray", lw=0.8, ls=":", alpha=0.7)
+    ax.text(T_mark + 10, ax.get_ylim()[0] + 5 if ax.get_ylim()[0] > 0 else 1010,
+            label, fontsize=8, color="gray", va="bottom")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A17 --- \texttt{Cp_vs_T.py} (2/2)}
+  \framesubtitle{Comparatif du Cp de l'air}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+# __ Mise en forme _____________________________________________
+ax.set_xlabel("Temperature $T$ (K)", fontsize=12)
+ax.set_ylabel(r"$C_p$ (J/kg$^{-1}$/K$^{-1}$)", fontsize=12)
+ax.set_title(r"Capacite thermique massique $C_p(T,P)$ de l'air", fontsize=13)
+ax.set_xlim(T_min, T_max)
+ax.legend(fontsize=10, loc="upper left")
+ax.grid(True, alpha=0.3)
+
+# écart relatif a 1100 K pour annotation
+P1_Pa = 1e5
+Cp_1100_cool = PropsSI("Cpmass", "T", 1100, "P", P1_Pa, "Air")
+ecart = (Cp_1100_cool - Cp_gp) / Cp_gp * 100
+ax.annotate(f"+{ecart:.1f} % a 1100 K\n(1 bar vs. GP)",
+            xy=(1100, Cp_1100_cool), xytext=(950, Cp_1100_cool + 20),
+            fontsize=8, color=colors[-1],
+            arrowprops=dict(arrowstyle="->", color=colors[-1], lw=1.0))
+
+plt.tight_layout()
+
+import os
+os.makedirs("fig", exist_ok=True)
+plt.savefig("fig/Cp_vs_T.pdf", dpi=150)
+plt.savefig("fig/Cp_vs_T.png", dpi=150)
+print(f"Figures sauvegardees : fig/Cp_vs_T.pdf / .png")
+print(f"écart CoolProp vs. GP a 1100 K, 1 bar : +{ecart:.1f} %")
+plt.show()
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A18 --- \texttt{gpcoolprop.py} (1/5)}
+  \framesubtitle{Comparatif de rendement G.P. vs gaz reel}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+"""
+Graphe comparatif : Ericsson gaz parfait vs CoolProp
+Deux sous-graphes côte a côte :
+  - Gauche : eta en fonction de Tmax (rp et Tmin fixes)
+  - Droite  : eta en fonction de rp  (Tmax et Tmin fixes)
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from CoolProp.CoolProp import PropsSI as CP
+from functools import lru_cache
+
+# __ Parametres ________________________________________________
+T_MIN   = 300       # K  (fixe)
+T_MAX   = 1100      # K  (fixe pour le graphe de droite)
+P_MIN   = 1e5       # Pa = 1 bar (fixe)
+RP_REF  = 10        # rapport de pression de reference (graphe gauche)
+
+T_MAX_RANGE = np.linspace(600, 1300, 120)   # abscisse gauche
+RP_RANGE    = np.linspace(1.5, 25,   120)   # abscisse droite
+
+FLUID = "Air"
+
+# __ CoolProp avec cache _______________________________________
+@lru_cache(maxsize=50000)
+def get_s(T, P):
+    return CP("S", "T", float(T), "P", float(P), FLUID)
+
+# __ Ericsson CoolProp _________________________________________
+def eta_ericsson_coolprop(T_min, T_max, P_min, rp):
+    P_max = P_min * rp
+    s1 = get_s(T_min, P_min)
+    s2 = get_s(T_min, P_max)
+    s3 = get_s(T_max, P_max)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A18 --- \texttt{gpcoolprop.py} (2/5)}
+  \framesubtitle{Comparatif de rendement G.P. vs gaz reel}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+    s4 = get_s(T_max, P_min)
+    Q_in  = T_max * (s4 - s3)
+    Q_out = T_min * (s1 - s2)
+    W_net = Q_in - Q_out
+    return W_net / Q_in
+
+# __ Ericsson gaz parfait ______________________________________
+# eta_GP = 1 - Tmin/Tmax  (independant de rp avec regeneration)
+def eta_ericsson_gp(T_min, T_max):
+    return 1.0 - T_min / T_max
+
+# __ Calcul des courbes ________________________________________
+# Graphe gauche : f(Tmax), rp fixe
+eta_cp_tmax  = [eta_ericsson_coolprop(T_MIN, T, P_MIN, RP_REF) * 100
+                for T in T_MAX_RANGE]
+eta_gp_tmax  = [eta_ericsson_gp(T_MIN, T) * 100
+                for T in T_MAX_RANGE]
+eta_carnot_tmax = [eta_ericsson_gp(T_MIN, T) * 100   # = Carnot
+                   for T in T_MAX_RANGE]
+
+# Graphe droit : f(rp), Tmax fixe
+# Pour gaz parfait : eta independant de rp -> ligne horizontale
+eta_cp_rp   = [eta_ericsson_coolprop(T_MIN, T_MAX, P_MIN, rp) * 100
+               for rp in RP_RANGE]
+eta_gp_rp   = [eta_ericsson_gp(T_MIN, T_MAX) * 100] * len(RP_RANGE)
+
+# __ Mise en page ______________________________________________
+BLEU    = "#1A3A6B"   # bleuMarine
+ROUGE   = "#C0392B"   # rougeCycle
+ORANGE  = "#D36900"   # orangeAcc
+GRIS    = "#888888"
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+fig.subplots_adjust(wspace=0.38, left=0.09, right=0.97,
+                    top=0.88, bottom=0.13)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A18 --- \texttt{gpcoolprop.py} (3/5)}
+  \framesubtitle{Comparatif de rendement G.P. vs gaz reel}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+# __ Sous-graphe gauche ________________________________________
+ax = axes[0]
+ax.plot(T_MAX_RANGE, eta_cp_tmax,
+        color=BLEU,  lw=2.2, label="Ericsson - CoolProp (gaz reel)")
+ax.plot(T_MAX_RANGE, eta_gp_tmax,
+        color=ROUGE, lw=2.2, linestyle="--",
+        label="Ericsson - Gaz parfait ($\\eta = 1 - T_{\\min}/T_{\\max}$)")
+
+# Annotation de l'ecart a Tmax = 1100 K
+T_ref = 1100
+eta_cp_ref  = eta_ericsson_coolprop(T_MIN, T_ref, P_MIN, RP_REF) * 100
+eta_gp_ref  = eta_ericsson_gp(T_MIN, T_ref) * 100
+ecart = eta_gp_ref - eta_cp_ref
+ax.annotate("",
+    xy=(T_ref, eta_cp_ref), xytext=(T_ref, eta_gp_ref),
+    arrowprops=dict(arrowstyle="<->", color=ORANGE, lw=1.8))
+ax.text(T_ref + 18, (eta_cp_ref + eta_gp_ref) / 2,
+        f"$\\Delta\\eta = {ecart:.1f}$ pts",
+        color=ORANGE, fontsize=9, va="center")
+
+ax.set_xlabel("$T_{\\max}$ (K)", fontsize=11)
+ax.set_ylabel("$\\eta$ (%)", fontsize=11)
+ax.set_title(f"Influence de $T_{{\\max}}$\n"
+             f"$T_{{\\min}}={T_MIN}\\,\\mathrm{{K}}$, "
+             f"$r_p={RP_REF}$",
+             fontsize=10)
+ax.set_xlim(T_MAX_RANGE[0], T_MAX_RANGE[-1])
+ax.set_ylim(45, 82)
+ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+ax.grid(True, which="major", linestyle="--", alpha=0.4)
+ax.grid(True, which="minor", linestyle=":",  alpha=0.2)
+ax.legend(fontsize=8.5, loc="upper left", framealpha=0.9)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A18 --- \texttt{gpcoolprop.py} (4/5)}
+  \framesubtitle{Comparatif de rendement G.P. vs gaz reel}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+# __ Sous-graphe droit _________________________________________
+ax = axes[1]
+ax.plot(RP_RANGE, eta_cp_rp,
+        color=BLEU,  lw=2.2, label="Ericsson - CoolProp (gaz reel)")
+ax.plot(RP_RANGE, eta_gp_rp,
+        color=ROUGE, lw=2.2, linestyle="--",
+        label="Ericsson - Gaz parfait (constant)")
+
+# Annotation : eta GP est constant car independant de rp
+ax.text(RP_RANGE[-1] - 1.5, eta_gp_rp[0] + 0.5,
+        "GP : $\\eta$ indep. de $r_p$",
+        color=ROUGE, fontsize=8.5, ha="right")
+
+# Annotation ecart a rp = 10
+rp_ref_idx = np.argmin(np.abs(RP_RANGE - RP_REF))
+eta_cp_rp10  = eta_cp_rp[rp_ref_idx]
+eta_gp_rp10  = eta_gp_rp[rp_ref_idx]
+ecart_rp = eta_gp_rp10 - eta_cp_rp10
+ax.annotate("",
+    xy=(RP_REF, eta_cp_rp10), xytext=(RP_REF, eta_gp_rp10),
+    arrowprops=dict(arrowstyle="<->", color=ORANGE, lw=1.8))
+ax.text(RP_REF + 0.6, (eta_cp_rp10 + eta_gp_rp10) / 2,
+        f"$\\Delta\\eta = {ecart_rp:.1f}$ pts\n($r_p={RP_REF}$)",
+        color=ORANGE, fontsize=9, va="center")
+
+ax.set_xlabel("$r_p = P_{\\max}/P_{\\min}$", fontsize=11)
+ax.set_ylabel("$\\eta$ (%)", fontsize=11)
+ax.set_title(f"Influence de $r_p$\n"
+             f"$T_{{\\min}}={T_MIN}\\,\\mathrm{{K}}$, "
+             f"$T_{{\\max}}={T_MAX}\\,\\mathrm{{K}}$",
+             fontsize=10)
+ax.set_xlim(RP_RANGE[0], RP_RANGE[-1])
+ax.set_ylim(60, 76)
+ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A18 --- \texttt{gpcoolprop.py} (5/5)}
+  \framesubtitle{Comparatif de rendement G.P. vs gaz reel}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+ax.grid(True, which="major", linestyle="--", alpha=0.4)
+ax.grid(True, which="minor", linestyle=":",  alpha=0.2)
+ax.legend(fontsize=8.5, loc="lower right", framealpha=0.9)
+
+# __ Titre global ______________________________________________
+fig.suptitle(
+    "Ericsson : comparaison gaz parfait vs gaz reel (CoolProp)\n"
+    r"$P_{\min} = 1\,\mathrm{bar}$, fluide : Air",
+    fontsize=11, y=0.98
+)
+
+plt.savefig("gp_vs_coolprop.pdf", dpi=300, bbox_inches="tight")
+plt.savefig("gp_vs_coolprop.png", dpi=200, bbox_inches="tight")
+print("Figures sauvegardees : gp_vs_coolprop.pdf / .png")
+
+# __ Affichage des valeurs cles ________________________________
+print(f"\nValeurs de reference (Tmax={T_ref} K, rp={RP_REF}) :")
+print(f"  eta gaz parfait = {eta_gp_ref:.2f} %")
+print(f"  eta CoolProp    = {eta_cp_ref:.2f} %")
+print(f"  écart         = {ecart:.2f} points")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (1/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+"""
+Generation des figures pour la presentation TIPE.
+Utilise les modules existants src/Brayton.py, src/Ericsson.py, src/Stirling.py.
+"""
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+os.makedirs("fig", exist_ok=True)
+
+# __ Palette identique a la presentation beamer ______________
+C_B = (192/255,  57/255,  43/255)   # rougeCycle
+C_E = ( 26/255,  58/255, 107/255)   # bleuMarine
+C_S = ( 30/255, 132/255,  73/255)   # vertCycle
+C_A = (211/255, 105/255,   0/255)   # orangeAcc
+C_D = ( 50/255,  50/255,  60/255)   # grisTexte
+
+plt.rcParams.update({
+    "font.family": "serif", "font.size": 8,
+    "axes.titlesize": 8, "axes.labelsize": 7.5,
+    "xtick.labelsize": 7, "ytick.labelsize": 7,
+    "legend.fontsize": 6.5, "lines.linewidth": 1.6,
+    "axes.grid": True, "grid.alpha": 0.3, "figure.dpi": 150,
+})
+SEG_C = [C_B, C_E, C_S, C_A]
+
+def save(name):
+    plt.tight_layout()
+    plt.savefig(f"fig/{name}", bbox_inches="tight")
+    plt.close()
+    print(f"  fig/{name}")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (2/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+# ============================================================
+# 1. Importer et calculer les 3 cycles
+# ============================================================
+from src import Brayton, Ericsson, Stirling
+
+TMIN, TMAX = 300.0, 1100.0
+PMIN, PMAX = 2e5, 20e5
+VMIN, VMAX = 0.3, 1.0
+RP = 10
+
+print("Calcul des cycles (peut prendre ~30 s)...")
+rb = Brayton.cycle_brayton(T1=TMIN, P1=PMIN, pressure_ratio=RP,  T3=TMAX, show_plot=False)
+re = Ericsson.cycle_ericsson(T_min=TMIN, T_max=TMAX, P_min=PMIN, P_max=PMAX, show_plot=False)
+rs = Stirling.cycle_stirling(T_min=TMIN, T_max=TMAX, V_min=VMIN, V_max=VMAX, show_plot=False)
+print("Cycles calcules.")
+
+LB = ["1->2 Isentropique", "2->3 Isobare",  "3->4 Isentropique", "4->1 Isobare"]
+LE = ["1->2 Isotherme",    "2->3 Isobare",  "3->4 Isotherme",    "4->1 Isobare"]
+LS = ["1->2 Isotherme",    "2->3 Isochore", "3->4 Isotherme",    "4->1 Isochore"]
+
+SEGS_PV = [("V12","P12"),("V23","P23"),("V34","P34"),("V41","P41")]
+SEGS_TS = [("s12","T12"),("s23","T23"),("s34","T34"),("s41","T41")]
+T_CORNERS = [TMIN, TMIN, TMAX, TMAX]
+
+def pv_ts(res, title, col, labels, prefix):
+    cv = res["curves"]
+    # - P-V -
+    fig, ax = plt.subplots(figsize=(3.0, 2.1))
+    for (vk,pk), lb, c in zip(SEGS_PV, labels, SEG_C):
+        ax.plot(cv[vk], np.array(cv[pk])/1e5, color=c, label=lb)
+    ax.scatter(res["V"], [p/1e5 for p in res["P"]], s=18, color=C_D, zorder=5)
+    for i,(v,p) in enumerate(zip(res["V"], res["P"])):
+        ax.annotate(str(i+1),(v,p/1e5), xytext=(3,3), textcoords="offset points",
+                    fontsize=6, color=C_D)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (3/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+    ax.set_xlabel("Volume spec. (m3/kg)"); ax.set_ylabel("Pression (bar)")
+    ax.set_title(f"Cycle {title} - P-V", color=col, fontweight="bold")
+    ax.legend(loc="upper right", framealpha=0.8, fontsize=5.5)
+    save(f"{prefix}_PV.pdf")
+
+    # - T-s -
+    fig, ax = plt.subplots(figsize=(3.0, 2.1))
+    for (sk,tk), lb, c in zip(SEGS_TS, labels, SEG_C):
+        ax.plot(cv[sk], cv[tk], color=c, label=lb)
+    ax.scatter(res["s"], T_CORNERS, s=18, color=C_D, zorder=5)
+    for i,(s,t) in enumerate(zip(res["s"], T_CORNERS)):
+        ax.annotate(str(i+1),(s,t), xytext=(3,3), textcoords="offset points",
+                    fontsize=6, color=C_D)
+    ax.set_xlabel("Entropie (J/kg/K)"); ax.set_ylabel("Temperature (K)")
+    ax.set_title(f"Cycle {title} - T-s", color=col, fontweight="bold")
+    ax.legend(loc="upper left", framealpha=0.8, fontsize=5.5)
+    save(f"{prefix}_Ts.pdf")
+
+print("Diagrammes P-V / T-s...")
+pv_ts(rb, "Brayton",  C_B, LB, "brayton")
+pv_ts(re, "Ericsson", C_E, LE, "ericsson")
+pv_ts(rs, "Stirling", C_S, LS, "stirling")
+
+# ============================================================
+# 2. Gaz parfait vs CoolProp : eta(Tmax)
+# ============================================================
+print("Gaz parfait vs CoolProp...")
+Tmaxs = np.linspace(600, 1300, 28)
+gp, cp_e, cp_b = [], [], []
+for Tm in Tmaxs:
+    gp.append((1 - TMIN/Tm)*100)
+    try:
+        r = Ericsson.cycle_ericsson(T_min=TMIN,T_max=float(Tm),P_min=PMIN,P_max=PMAX,show_plot=False)
+        cp_e.append(r["energetics"]["eta"]*100)
+    except: cp_e.append(np.nan)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (4/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+    try:
+        r = Brayton.cycle_brayton(T1=TMIN,P1=PMIN,pressure_ratio=RP,T3=float(Tm),show_plot=False)
+        cp_b.append(r["energetics"]["eta"]*100)
+    except: cp_b.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(4.2, 2.8))
+ax.plot(Tmaxs, gp,   color=C_A, ls="--", label="Ericsson gaz parfait")
+ax.plot(Tmaxs, cp_e, color=C_E,          label="Ericsson CoolProp")
+ax.plot(Tmaxs, cp_b, color=C_B,          label=f"Brayton CoolProp ($r_p$={RP})")
+ax.set_xlabel("$T_{\\mathrm{max}}$ (K)"); ax.set_ylabel("Rendement (%)")
+ax.set_title("Gaz parfait vs gaz reel (CoolProp)"); ax.legend()
+save("gp_vs_coolprop.pdf")
+
+# ============================================================
+# 3. eta(Tmax) - 3 cycles
+# ============================================================
+print("eta vs Tmax...")
+eta_e, eta_s, eta_b, carnot = [], [], [], []
+for Tm in Tmaxs:
+    carnot.append((1 - TMIN/Tm)*100)
+    try:
+        r = Ericsson.cycle_ericsson(T_min=TMIN,T_max=float(Tm),P_min=PMIN,P_max=PMAX,show_plot=False)
+        eta_e.append(r["energetics"]["eta"]*100)
+    except: eta_e.append(np.nan)
+    try:
+        r = Stirling.cycle_stirling(T_min=TMIN,T_max=float(Tm),V_min=VMIN,V_max=VMAX,show_plot=False)
+        eta_s.append(r["energetics"]["eta"]*100)
+    except: eta_s.append(np.nan)
+    try:
+        r = Brayton.cycle_brayton(T1=TMIN,P1=PMIN,pressure_ratio=RP,T3=float(Tm),show_plot=False)
+        eta_b.append(r["energetics"]["eta"]*100)
+    except: eta_b.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(4.5, 3.0))
+ax.plot(Tmaxs, carnot, color=C_D, ls=":", lw=1.2, label="Carnot")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (5/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+ax.plot(Tmaxs, eta_e,  color=C_E,              label="Ericsson")
+ax.plot(Tmaxs, eta_s,  color=C_S, ls="--",     label="Stirling")
+ax.plot(Tmaxs, eta_b,  color=C_B,              label=f"Brayton ($r_p$={RP})")
+ax.set_xlabel("$T_{\\mathrm{max}}$ (K)"); ax.set_ylabel("Rendement (%)")
+ax.set_title("Influence de $T_{\\mathrm{max}}$ sur $\\eta$"); ax.legend()
+save("eta_Tmax.pdf")
+
+# ============================================================
+# 4. Wnet(Pmax) - Ericsson
+# ============================================================
+print("Wnet vs Pmax...")
+Pmaxs = np.linspace(5e5, 30e5, 22)
+wnet_e = []
+for Pm in Pmaxs:
+    try:
+        r = Ericsson.cycle_ericsson(T_min=TMIN,T_max=TMAX,P_min=PMIN,P_max=float(Pm),show_plot=False)
+        wnet_e.append(r["energetics"]["W_cycle"]/1000)
+    except: wnet_e.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(3.8, 2.6))
+ax.plot(Pmaxs/1e5, wnet_e, color=C_E)
+ax.set_xlabel("$P_{\\mathrm{max}}$ (bar)"); ax.set_ylabel("$W_{\\mathrm{net}}$ (kJ/kg)")
+ax.set_title("Ericsson : $W_{\\mathrm{net}}$ vs $P_{\\mathrm{max}}$")
+save("Wnet_Pmax.pdf")
+
+# ============================================================
+# 5. eta(rp) - Brayton vs Ericsson
+# ============================================================
+print("eta vs rp...")
+RPs = np.arange(2, 25)
+eta_b_rp, eta_e_rp = [], []
+for rp in RPs:
+    try:
+        r = Brayton.cycle_brayton(T1=TMIN,P1=PMIN,pressure_ratio=int(rp),T3=TMAX,show_plot=False)
+        eta_b_rp.append(r["energetics"]["eta"]*100)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (6/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+    except: eta_b_rp.append(np.nan)
+    try:
+        r = Ericsson.cycle_ericsson(T_min=TMIN,T_max=TMAX,P_min=PMIN,P_max=PMIN*rp,show_plot=False)
+        eta_e_rp.append(r["energetics"]["eta"]*100)
+    except: eta_e_rp.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(3.8, 2.6))
+ax.plot(RPs, eta_b_rp, color=C_B, label="Brayton")
+ax.plot(RPs, eta_e_rp, color=C_E, label="Ericsson (constant)")
+ax.set_xlabel("Rapport de pression $r_p$"); ax.set_ylabel("Rendement (%)")
+ax.set_title("$\\eta$ vs $r_p$ : Brayton / Ericsson"); ax.legend()
+save("eta_rp.pdf")
+
+# ============================================================
+# 6. eta(Tmin) - Brayton / Ericsson / Stirling
+# ============================================================
+print("eta vs Tmin...")
+Tmins = np.linspace(280, 450, 22)
+eta_b_t, eta_e_t, eta_s_t, carnot_t = [], [], [], []
+for Tm in Tmins:
+    carnot_t.append((1 - Tm/TMAX)*100)
+    try:
+        r = Brayton.cycle_brayton(T1=float(Tm),P1=PMIN,pressure_ratio=RP,T3=TMAX,show_plot=False)
+        eta_b_t.append(r["energetics"]["eta"]*100)
+    except: eta_b_t.append(np.nan)
+    try:
+        r = Ericsson.cycle_ericsson(T_min=float(Tm),T_max=TMAX,P_min=PMIN,P_max=PMAX,show_plot=False)
+        eta_e_t.append(r["energetics"]["eta"]*100)
+    except: eta_e_t.append(np.nan)
+    try:
+        r = Stirling.cycle_stirling(T_min=float(Tm),T_max=TMAX,V_min=VMIN,V_max=VMAX,show_plot=False)
+        eta_s_t.append(r["energetics"]["eta"]*100)
+    except: eta_s_t.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(4.2, 2.8))
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (7/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+ax.plot(Tmins, carnot_t, color=C_D, ls=":",  lw=1.2, label="Carnot")
+ax.plot(Tmins, eta_b_t,  color=C_B, ls="-.",          label="Brayton")
+ax.plot(Tmins, eta_e_t,  color=C_E,                   label="Ericsson")
+ax.plot(Tmins, eta_s_t,  color=C_S, ls="--",          label="Stirling")
+ax.set_xlabel("$T_{\\mathrm{min}}$ (K)"); ax.set_ylabel("Rendement (%)")
+ax.set_title("Influence de $T_{\\mathrm{min}}$ sur $\\eta$"); ax.legend()
+save("eta_Tmin.pdf")
+
+# __ 6b. Qin(Tmin) - Ericsson / Stirling _____________________
+print("Qin vs Tmin...")
+qin_b_t, qin_e_t, qin_s_t = [], [], []
+for Tm in Tmins:
+    try:
+        r = Brayton.cycle_brayton(T1=float(Tm),P1=PMIN,pressure_ratio=RP,T3=TMAX,show_plot=False)
+        qin_b_t.append(r["energetics"]["Q_in"]/1000)
+    except: qin_b_t.append(np.nan)
+    try:
+        r = Ericsson.cycle_ericsson(T_min=float(Tm),T_max=TMAX,P_min=PMIN,P_max=PMAX,show_plot=False)
+        qin_e_t.append(r["energetics"]["Q_in"]/1000)
+    except: qin_e_t.append(np.nan)
+    try:
+        r = Stirling.cycle_stirling(T_min=float(Tm),T_max=TMAX,V_min=VMIN,V_max=VMAX,show_plot=False)
+        qin_s_t.append(r["energetics"]["Q_in"]/1000)
+    except: qin_s_t.append(np.nan)
+
+fig, ax = plt.subplots(figsize=(4.2, 2.8))
+ax.plot(Tmins, qin_b_t, color=C_B, ls="-.",  label="Brayton")
+ax.plot(Tmins, qin_e_t, color=C_E,            label="Ericsson")
+ax.plot(Tmins, qin_s_t, color=C_S, ls="--",  label="Stirling")
+ax.set_xlabel("$T_{\\mathrm{min}}$ (K)"); ax.set_ylabel("$Q_{\\mathrm{in}}$ (kJ/kg)")
+ax.set_title("Influence de $T_{\\mathrm{min}}$ sur $Q_{\\mathrm{in}}$"); ax.legend()
+save("Qin_Tmin.pdf")
+
+# ============================================================
+# 7. Comparaison eta et Wnet - barres
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A19 --- \texttt{generate_figures.py} (8/8)}
+  \framesubtitle{Automatisation des graphes}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+# ============================================================
+print("Comparaisons barres...")
+cycles = ["Brayton", "Ericsson", "Stirling"]
+colors = [C_B, C_E, C_S]
+etas  = [rb["energetics"]["eta"]*100,
+         re["energetics"]["eta"]*100,
+         rs["energetics"]["eta"]*100]
+wnets = [rb["energetics"]["W_net"]/1000,
+         re["energetics"]["W_cycle"]/1000,
+         rs["energetics"]["W_cycle"]/1000]
+
+fig, ax = plt.subplots(figsize=(3.8, 2.6))
+bars = ax.bar(cycles, etas, color=colors, width=0.5, edgecolor="white")
+for b, v in zip(bars, etas):
+    ax.text(b.get_x()+b.get_width()/2, b.get_height()+0.4,
+            f"{v:.1f}%", ha="center", fontsize=7, fontweight="bold")
+ax.set_ylabel("Rendement (%)"); ax.set_ylim(0, max(etas)*1.18)
+ax.set_title("Comparaison $\\eta$ - 3 cycles\n($T_{\\min}$=300 K, $T_{\\max}$=1100 K)")
+save("comparaison_eta.pdf")
+
+fig, ax = plt.subplots(figsize=(3.8, 2.6))
+bars = ax.bar(cycles, wnets, color=colors, width=0.5, edgecolor="white")
+for b, v in zip(bars, wnets):
+    ax.text(b.get_x()+b.get_width()/2, b.get_height()+1.5,
+            f"{v:.0f}", ha="center", fontsize=7, fontweight="bold")
+ax.set_ylabel("$W_{\\mathrm{net}}$ (kJ/kg)"); ax.set_ylim(0, max(wnets)*1.20)
+ax.set_title("Comparaison $W_{\\mathrm{net}}$ - 3 cycles")
+save("comparaison_Wnet.pdf")
+
+print("\nToutes les figures generees dans fig/")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (1/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch
+import matplotlib.ticker as ticker
+from scipy.ndimage import uniform_filter1d
+
+lines = open("exp/mesures_TIPE_pv.txt").readlines()
+V_data, P_data = [], []
+for line in lines:
+    line = line.strip()
+    if not line or line.startswith("V") or line.startswith("T"):
+        continue
+    parts = line.replace(",", ".").split()
+    if len(parts) == 2:
+        try:
+            V_data.append(float(parts[0])); P_data.append(float(parts[1]))
+        except: pass
+
+V = np.array(V_data); P = np.array(P_data)
+
+# Separer les deux branches par mediane de P
+P_med = np.median(P)
+mask_haut = P > P_med; mask_bas = P <= P_med
+V_h = V[mask_haut]; P_h = P[mask_haut]
+V_b = V[mask_bas];  P_b = P[mask_bas]
+
+# Trier
+idx_h = np.argsort(V_h); idx_b = np.argsort(V_b)
+V_h = V_h[idx_h]; P_h = P_h[idx_h]
+V_b = V_b[idx_b]; P_b = P_b[idx_b]
+
+# Integrale
+W_haut = np.trapezoid(P_h, V_h)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (2/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+W_bas  = np.trapezoid(P_b, V_b)
+W_net_mbar_cm3 = W_haut - W_bas
+W_net_J = W_net_mbar_cm3 * 100 * 1e-6  # mbar*cm3 -> J
+
+print(f"=== Resultats experimentaux ===")
+print(f"V_min = {V.min():.3f} cm3  V_max = {V.max():.3f} cm3")
+print(f"r_v   = {V.max()/V.min():.4f}  (constructeur = 1.375)")
+print(f"P_min = {P.min():.1f} mbar  P_max = {P.max():.1f} mbar")
+print(f"P_moy_haut = {P_h.mean():.1f} mbar  P_moy_bas = {P_b.mean():.1f} mbar")
+print(f"P_moyen = {P_h.mean()-P_b.mean():.1f} mbar")
+print()
+print(f"W_net = {W_net_mbar_cm3:.2f} mbar/cm3 = {W_net_J*1000:.3f} mJ = {W_net_J:.6f} J")
+print()
+
+
+# Temperature
+T_dem = 124 + 273.15  # K
+T_max = 228 + 273.15  # K
+T_amb = 20 + 273.15   # K  (T_froid supposee ambiante)
+print(f"T_demarrage = {T_dem:.1f} K   T_max = {T_max:.1f} K")
+print(f"eta_Carnot (T_amb=293K, T_max=501K) = {(1-293/T_max)*100:.2f}%")
+print(f"eta_Carnot (T_dem=397K, T_max=501K) = {(1-T_dem/T_max)*100:.2f}%")
+print()
+
+
+# Puissance
+for n in [700, 900, 1000]:
+    f = n/60
+    P_meca = W_net_J * f
+    print(f"n = {n} tr/min -> P_meca = {P_meca*1000:.2f} mW")
+
+# W_net par kg (pour comparaison modele)
+# masse air dans le volume : P_moy * V_moy / (r_air * T_moy)
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (3/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+r_air = 287  # J/kg/K
+V_moy_m3 = ((V.min()+V.max())/2) * 1e-6
+P_moy_Pa = ((P.min()+P.max())/2) * 100
+T_moy_K = (T_dem + T_max) / 2
+m_air = P_moy_Pa * V_moy_m3 / (r_air * T_moy_K)
+print(f"\nMasse d'air = {m_air*1e6:.2f} ug")
+print(f"W_net/kg = {W_net_J/m_air:.1f} J/kg")
+
+
+
+
+# __ Donnees ___________________________________________________
+lines = open("exp/mesures_TIPE_pv.txt").readlines()
+V_data, P_data = [], []
+for line in lines:
+    line = line.strip()
+    if not line or line.startswith("V") or line.startswith("T"): continue
+    parts = line.replace(",", ".").split()
+    if len(parts) == 2:
+        try: V_data.append(float(parts[0])); P_data.append(float(parts[1]))
+        except: pass
+
+V = np.array(V_data); P = np.array(P_data)
+
+# Separer branches
+P_med = np.median(P)
+mask_h = P > P_med; mask_b = P <= P_med
+V_h = V[mask_h]; P_h = P[mask_h]
+V_b = V[mask_b]; P_b = P[mask_b]
+idx_h = np.argsort(V_h); idx_b = np.argsort(V_b)
+V_h = V_h[idx_h]; P_h = P_h[idx_h]
+V_b = V_b[idx_b]; P_b = P_b[idx_b]
+
+# Lissage pour les courbes enveloppes
+N = 12
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (4/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+V_h_sm = V_h; P_h_sm = uniform_filter1d(P_h, N)
+V_b_sm = V_b; P_b_sm = uniform_filter1d(P_b, N)
+
+# W_net
+W_net_J = np.trapezoid(P_h, V_h)*100*1e-6 - np.trapezoid(P_b, V_b)*100*1e-6
+
+
+# __ Modele Theorique __________________________________________
+import sys, os
+sys.path.insert(0, os.path.abspath('src'))
+from Stirling import cycle_stirling
+
+m_air_kg = m_air
+v_min_m3kg = (V.min()*1e-6) / m_air_kg
+v_max_m3kg = (V.max()*1e-6) / m_air_kg
+
+# Calculate cycle theoretical
+# We use T_dem as T_min
+res_th = cycle_stirling(T_min=T_dem, T_max=T_max, V_min=v_min_m3kg, V_max=v_max_m3kg, show_plot=False)
+
+V_th = []
+P_th = []
+# The cycle is divided into 4 transformations in res_th['curves']
+V_th = np.concatenate([res_th['curves']['V12'], res_th['curves']['V23'], res_th['curves']['V34'], res_th['curves']['V41']])
+P_th = np.concatenate([res_th['curves']['P12'], res_th['curves']['P23'], res_th['curves']['P34'], res_th['curves']['P41']])
+
+V_th = np.array(V_th) * m_air_kg * 1e6 # convert to cm3
+P_th = np.array(P_th) / 100 # convert Pa to mbar
+
+# __ Figure ____________________________________________________
+BLEU  = "#1A3A6B"
+ROUGE = "#C0392B"
+VERT  = "#1E8449"
+ORANGE= "#D36900"
+BLEU2 = "#2E5FA3"
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (5/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+fig, ax = plt.subplots(figsize=(7.5, 5.0))
+
+# Nuage de points bruts
+ax.scatter(V_h, P_h, c=ROUGE, s=6, alpha=0.35, zorder=2, label="_nolegend_")
+ax.scatter(V_b, P_b, c=BLEU,  s=6, alpha=0.35, zorder=2, label="_nolegend_")
+
+# Courbes lissees
+ax.plot(V_h_sm, P_h_sm, color=ROUGE, lw=2.2, zorder=4,
+        label=r'Detente isotherme ($T_{\rm max}$=228\, degC)')
+ax.plot(V_b_sm, P_b_sm, color=BLEU,  lw=2.2, zorder=4,
+        label=r'Compression isotherme ($T_{\rm min}$=124\, degC demarrage)')
+
+
+# Overlay theorique
+ax.plot(V_th, P_th, color='black', lw=1.5, linestyle='--', zorder=5, label='Modele theorique CoolProp')
+
+# Point remarquable 
+ax.scatter([V_h_sm[len(V_h_sm)//2]], [P_h_sm[len(P_h_sm)//2]], c='red', s=40, zorder=6, label='Point de fonctionnement typique')
+ax.annotate('Application', xy=(V_h_sm[len(V_h_sm)//2], P_h_sm[len(P_h_sm)//2]), xytext=(V_h_sm[len(V_h_sm)//2]+1.5, P_h_sm[len(P_h_sm)//2]+30),
+            arrowprops=dict(arrowstyle="->", color='red'), color='red')
+
+# Remplissage de l'aire W_net
+V_fill = np.concatenate([V_h_sm, V_b_sm[::-1]])
+P_fill = np.concatenate([P_h_sm, P_b_sm[::-1]])
+ax.fill(V_fill, P_fill, alpha=0.12, color=ORANGE, zorder=1)
+ax.text(38.5, 970, f'$W_{{net}}$ = {W_net_J*1000:.0f} mJ',
+        fontsize=10, color=ORANGE, fontweight='bold', ha='center')
+
+# Annotation eta_Carnot
+T_dem = 397.1; T_max = 501.1
+eta_C = (1 - T_dem/T_max)*100
+ax.text(32.3, 1130, f'$\\eta_{{Carnot}}$ = {eta_C:.1f}\u202f\u0025\n'
+        f'(Tmax={T_max-273:.0f}\u202f degC,\u2009Tdem.={T_dem-273:.0f}\u202f degC)',
+        fontsize=8.5, color=VERT,
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A20 --- \texttt{calculs.py} (6/6)}
+  \framesubtitle{Traitement des resultats experimentaux}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                  edgecolor=VERT, alpha=0.85))
+
+# Fleche sens de rotation (horaire en PV = moteur)
+ax.annotate("", xy=(40, 1040), xytext=(36, 1040),
+            arrowprops=dict(arrowstyle="-|>", color=ORANGE,
+                            lw=1.8, mutation_scale=16))
+ax.text(38.0, 1055, "sens cycle moteur", fontsize=8,
+        color=ORANGE, ha='center')
+
+ax.set_xlabel("Volume $V$ (cm3)", fontsize=11)
+ax.set_ylabel("Pression $P$ (mbar)", fontsize=11)
+ax.set_title(
+    "Diagramme P-V mesure - Moteur Stirling Jeulin 204081\n"
+    r"ExAO Foxy - $r_v = V_{\rm max}/V_{\rm min}$ = "
+    f"{V.max()/V.min():.3f}  |  342 points  |  fluide : Air",
+    fontsize=10
+)
+ax.xaxis.set_minor_locator(ticker.AutoMinorLocator())
+ax.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+ax.legend(fontsize=8.5, loc='upper right', framealpha=0.92)
+ax.set_xlim(31.0, 45.0)
+ax.set_ylim(780, 1200)
+fig.tight_layout()
+
+fig.savefig("fig/stirling_PV.pdf", dpi=300, bbox_inches="tight")
+fig.savefig("fig/stirling_PV.png", dpi=200, bbox_inches="tight")
+print("OK - stirling_PV.pdf / .png")
+print(f"W_net = {W_net_J*1000:.1f} mJ")
+print(f"r_v mesure = {V.max()/V.min():.4f}")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A21 --- \texttt{plot_stirling_eta_comp.py} (1/2)}
+  \framesubtitle{Comparatif eta vs Tmax}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+import sys, os
+import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from concurrent.futures import ThreadPoolExecutor
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+from Stirling import cycle_stirling
+
+T_min = 124 + 273.15  # T demarrage constant
+T_max_list = np.linspace(T_min + 10, T_min + 300, 30)
+
+v_min_m3kg = 1.0992157849889488
+v_max_m3kg = 1.5041697701307097
+
+def compute_eta(T_max):
+    try:
+        res = cycle_stirling(T_min=T_min, T_max=T_max, V_min=v_min_m3kg, V_max=v_max_m3kg, show_plot=False)
+        return res["energetics"]["eta"] * 100, res["energetics"]["eta_carnot"] * 100
+    except:
+        return np.nan, np.nan
+
+print("Computing etas...")
+etas_mod = []
+etas_car = []
+
+for T in T_max_list:
+    mod, car = compute_eta(T)
+    etas_mod.append(mod)
+    etas_car.append(car)
+
+fig, ax = plt.subplots(figsize=(6, 4.5))
+ax.plot(T_max_list - 273.15, etas_car, 'g--', lw=2, label="Carnot (Ideal)")
+ax.plot(T_max_list - 273.15, etas_mod, 'b-', lw=2, label="Modele CoolProp")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{A21 --- \texttt{plot_stirling_eta_comp.py} (2/2)}
+  \framesubtitle{Comparatif eta vs Tmax}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+# Point experimental
+# T_max exp = 228
+# eta_exp: calculer eta a partir du modele pour T_max=228
+eta_228 = compute_eta(228 + 273.15)[0]
+ax.scatter([228], [eta_228], c='red', s=50, zorder=5, label='Point Typique Experiment. (228 degC)')
+
+
+ax.set_xlabel("Temperature de source chaude $T_{max}$ ( degC)")
+ax.set_ylabel("Rendement $\eta$ (%)")
+ax.set_title(f"évolution de $\eta$ avec $T_{max}$ pour $T_{min} = {T_min-273.15:.0f}$ degC")
+ax.grid(True, linestyle="--", alpha=0.6)
+ax.legend()
+plt.tight_layout()
+
+os.makedirs("fig", exist_ok=True)
+fig.savefig("fig/stirling_eta_comp.pdf", dpi=300)
+fig.savefig("fig/stirling_eta_comp.png", dpi=200)
+print("Saved fig/stirling_eta_comp.pdf")
+  \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\end{document}

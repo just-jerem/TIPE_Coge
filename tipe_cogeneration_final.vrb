@@ -1,0 +1,25 @@
+\frametitle{A21 --- \texttt {plot_stirling_eta_comp.py} (2/2)}
+\framesubtitle{Comparatif eta vs Tmax}
+  \begin{exampleblock}{}
+  \begin{lstlisting}[language=Python, basicstyle=\tiny\ttfamily]
+
+# Point experimental
+# T_max exp = 228
+# eta_exp: calculer eta a partir du modele pour T_max=228
+eta_228 = compute_eta(228 + 273.15)[0]
+ax.scatter([228], [eta_228], c='red', s=50, zorder=5, label='Point Typique Experiment. (228 degC)')
+
+
+ax.set_xlabel("Temperature de source chaude $T_{max}$ ( degC)")
+ax.set_ylabel("Rendement $\eta$ (%)")
+ax.set_title(f"évolution de $\eta$ avec $T_{max}$ pour $T_{min} = {T_min-273.15:.0f}$ degC")
+ax.grid(True, linestyle="--", alpha=0.6)
+ax.legend()
+plt.tight_layout()
+
+os.makedirs("fig", exist_ok=True)
+fig.savefig("fig/stirling_eta_comp.pdf", dpi=300)
+fig.savefig("fig/stirling_eta_comp.png", dpi=200)
+print("Saved fig/stirling_eta_comp.pdf")
+  \end{lstlisting}
+  \end{exampleblock}
