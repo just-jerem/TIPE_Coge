@@ -183,8 +183,8 @@ Objectif final :
 
 ## OBJECTIF FINAL
 
-- [ ] Simulation fonctionnelle ✅
-- [ ] Étude paramétrique complète ✅
-- [ ] Résultats exploitables au jury ✅
-- [ ] Interface graphique ✅
-- [ ] Argumentaire solide ✅
+- [ ] Simulation fonctionnelle 
+- [ ] Étude paramétrique complète 
+- [ ] Résultats exploitables au jury 
+- [ ] Interface graphique 
+- [ ] Argumentaire solide 
